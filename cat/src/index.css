@@ -75,6 +75,33 @@ h1 {
   margin-top: 4px;
 }
 
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 16px;
+  margin-top: 4px;
+}
+
+.title-row h1 {
+  margin-top: 0;
+}
+
+.title-link {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--plum);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--plum) 35%, transparent);
+  padding-bottom: 1px;
+}
+
+.title-link:hover {
+  border-bottom-color: var(--plum);
+}
+
 .subtitle,
 .seated-count,
 .howto {

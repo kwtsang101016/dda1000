@@ -194,7 +194,12 @@ export default function App() {
           <p className="eyebrow">
             {roster.course} · {roster.section}
           </p>
-          <h1>Class Attending Table</h1>
+          <div className="title-row">
+            <h1>Class Attending Table</h1>
+            <a className="title-link" href="/arrangement/">
+              Arrangement
+            </a>
+          </div>
           <p className="subtitle">
             曾家炜 · Ka Wai Tsang · {roster.classroom}
           </p>
