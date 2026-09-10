@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DDA1000 · Course Arrangement · Fall 2026</title>
+    <meta
+      name="description"
+      content="Course arrangement for DDA1000 Freshmen Induction and Academic Planning, September–December 2026."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Noto+Sans+SC:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #132238;
+        --muted: #5a6573;
+        --paper: #f3f0ea;
+        --panel: #fffdf8;
+        --line: #d5cfc4;
+        --sea: #0f5c56;
+        --sea-deep: #0a3d39;
+        --coral: #c45c26;
+        --highlight: #e7f0ee;
+        --max: 920px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Source Sans 3", "Noto Sans SC", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 0% 0%, rgba(15, 92, 86, 0.08), transparent 34%),
+          linear-gradient(180deg, #ebe6dc 0%, var(--paper) 180px);
+        line-height: 1.55;
+      }
+
+      a {
+        color: var(--sea);
+      }
+
+      .wrap {
+        width: min(var(--max), calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .site-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 0 8px;
+      }
+
+      .site-nav strong {
+        font-family: "Fraunces", "Noto Sans SC", serif;
+        font-size: 18px;
+      }
+
+      .site-nav nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        font-size: 14px;
+      }
+
+      .site-nav a {
+        text-decoration: none;
+        color: var(--muted);
+      }
+
+      .site-nav a:hover {
+        color: var(--sea);
+      }
+
+      .hero {
+        padding: 36px 0 28px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--sea);
+        margin: 0 0 10px;
+      }
+
+      h1 {
+        font-family: "Fraunces", "Noto Sans SC", serif;
+        font-size: clamp(2rem, 5vw, 3.1rem);
+        line-height: 1.12;
+        margin: 0;
+        max-width: 14ch;
+      }
+
+      .hero-cn {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      .hero-lead {
+        margin: 18px 0 0;
+        max-width: 52ch;
+        font-size: 1.08rem;
+      }
+
+      .facts {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1px;
+        background: var(--line);
+        border: 1px solid var(--line);
+        margin: 28px 0 0;
+      }
+
+      .facts div {
+        background: var(--panel);
+        padding: 16px 18px;
+      }
+
+      .facts dt {
+        margin: 0;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .facts dd {
+        margin: 6px 0 0;
+        font-weight: 700;
+        font-size: 1.02rem;
+      }
+
+      .notice {
+        margin: 22px 0 0;
+        padding: 14px 16px;
+        background: var(--highlight);
+        border-left: 4px solid var(--sea);
+      }
+
+      .notice strong {
+        color: var(--sea-deep);
+      }
+
+      section {
+        padding: 42px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h2 {
+        font-family: "Fraunces", "Noto Sans SC", serif;
+        font-size: 1.7rem;
+        margin: 0 0 8px;
+      }
+
+      .section-lead {
+        margin: 0 0 22px;
+        color: var(--muted);
+        max-width: 60ch;
+      }
+
+      .goal-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 10px;
+      }
+
+      .goal-list li {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 14px 16px;
+        display: grid;
+        grid-template-columns: 2.2rem 1fr;
+        gap: 10px;
+        align-items: start;
+      }
+
+      .goal-list span {
+        font-family: "Fraunces", serif;
+        color: var(--sea);
+        font-weight: 700;
+      }
+
+      .activity-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .activity {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 16px 18px;
+      }
+
+      .activity h3 {
+        margin: 0 0 6px;
+        font-size: 1.05rem;
+      }
+
+      .activity p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.96rem;
+      }
+
+      .activity .when {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        color: var(--sea-deep);
+        font-weight: 600;
+      }
+
+      .schedule {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        font-size: 0.96rem;
+      }
+
+      .schedule th,
+      .schedule td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .schedule th {
+        background: var(--sea-deep);
+        color: #f4f7f6;
+        font-weight: 600;
+      }
+
+      .schedule tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .schedule tr.tomorrow td {
+        background: #eef6f4;
+      }
+
+      .tag {
+        display: inline-block;
+        margin-top: 4px;
+        padding: 2px 8px;
+        border: 1px solid var(--line);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .tag-joint {
+        border-color: #b9d4d0;
+        color: var(--sea-deep);
+        background: #eef6f4;
+      }
+
+      .tag-separate {
+        border-color: #e0cbb8;
+        color: #7a3f16;
+        background: #f8eee5;
+      }
+
+      .tag-small {
+        border-color: #c9c4d8;
+        color: #3d3560;
+        background: #f1eff8;
+      }
+
+      .speakers {
+        display: grid;
+        gap: 12px;
+      }
+
+      .speaker {
+        display: grid;
+        grid-template-columns: 140px 1fr;
+        gap: 16px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 16px 18px;
+      }
+
+      .speaker time {
+        display: block;
+        font-weight: 700;
+        color: var(--sea-deep);
+      }
+
+      .speaker h3 {
+        margin: 0 0 4px;
+        font-size: 1.05rem;
+      }
+
+      .speaker p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .req-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--panel);
+        border: 1px solid var(--line);
+      }
+
+      .req-table th,
+      .req-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+      }
+
+      .req-table th {
+        width: 58%;
+        font-weight: 600;
+      }
+
+      .req-table tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .pass-note {
+        margin: 16px 0 0;
+        padding: 14px 16px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+      }
+
+      .journal-steps {
+        margin: 0;
+        padding-left: 1.2rem;
+      }
+
+      .journal-steps li {
+        margin: 8px 0;
+      }
+
+      footer {
+        padding: 28px 0 48px;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      footer a {
+        font-weight: 600;
+      }
+
+      @media (max-width: 760px) {
+        .facts,
+        .activity-grid,
+        .speaker {
+          grid-template-columns: 1fr;
+        }
+
+        .schedule {
+          display: block;
+          overflow-x: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="site-nav">
+        <strong>DDA1000</strong>
+        <nav>
+          <a href="#about">About</a>
+          <a href="#goals">Goals</a>
+          <a href="#format">Format</a>
+          <a href="#schedule">Schedule</a>
+          <a href="#assessment">Assessment</a>
+          <a href="https://dda1000-cat.onrender.com">Class seating (L12)</a>
+        </nav>
+      </header>
+
+      <header class="hero">
+        <p class="eyebrow">School of Data Science · Fall 2026</p>
+        <h1>Freshmen Induction and Academic Planning</h1>
+        <p class="hero-cn">大学新生入学与学业规划</p>
+        <p class="hero-lead">
+          A one-unit induction course that helps SDS freshmen settle into university life, explore
+          data science and AI, and begin planning the next few years of study.
+        </p>
+
+        <dl class="facts">
+          <div>
+            <dt>When</dt>
+            <dd>Fridays, 13:30–14:30</dd>
+          </div>
+          <div>
+            <dt>Term</dt>
+            <dd>11 Sept – 18 Dec 2026</dd>
+          </div>
+          <div>
+            <dt>Your session (L12)</dt>
+            <dd>Teaching D Bldg 113 · 曾家炜</dd>
+          </div>
+        </dl>
+
+        <p class="notice">
+          <strong>First class: Friday 11 September 2026</strong> — “Getting to know people,”
+          separate-session meeting in your designated classroom (L12: Teaching D Bldg 113).
+        </p>
+      </header>
+
+      <section id="about">
+        <h2>What this course is</h2>
+        <p class="section-lead">
+          DDA1000 is a structured induction programme for newly arrived SDS students.
+        </p>
+        <p>
+          Through classroom meetings, invited talks, alumni and faculty sharing, group discussion,
+          and self-reflection, you will be guided to set goals and plan for study in the School of
+          Data Science and for university life toward the upper years. Topics span data science, AI,
+          and their social impact.
+        </p>
+        <p>
+          About <strong>500 students</strong> are divided into <strong>14 sessions</strong>. Each
+          session is led by a professor (course instructor and academic advisor), sometimes with a
+          co-advisor, and supported by 2–3 upper-year peer advisors / course assistants.
+        </p>
+      </section>
+
+      <section id="goals">
+        <h2>Course goals</h2>
+        <p class="section-lead">What we hope you will gain this term.</p>
+        <ol class="goal-list">
+          <li><span>01</span>Welcome SDS freshmen and support a smooth first-year transition.</li>
+          <li><span>02</span>Explain what university education means and what university life is like.</li>
+          <li>
+            <span>03</span>Introduce data science and AI, and how SDS courses support study in these
+            areas.
+          </li>
+          <li>
+            <span>04</span>Help you identify interests, set goals, and draft an initial plan for
+            academic and personal development.
+          </li>
+          <li>
+            <span>05</span>Build a positive attitude for overcoming challenges in university study.
+          </li>
+          <li>
+            <span>06</span>Strengthen the SDS community and encourage communication among students
+            and with SDS faculty.
+          </li>
+        </ol>
+      </section>
+
+      <section id="format">
+        <h2>Four kinds of learning activities</h2>
+        <p class="section-lead">
+          The term mixes large lectures, your own session, an off-campus day, and small advisor
+          meetings.
+        </p>
+        <div class="activity-grid">
+          <article class="activity">
+            <h3>Joint-session lecture</h3>
+            <p>All 14 sessions meet together in a large venue.</p>
+            <p class="when">18 Sept · 16 Oct · 30 Oct</p>
+          </article>
+          <article class="activity">
+            <h3>Separate-session meeting</h3>
+            <p>Your L12 group meets with your advisor in the designated classroom.</p>
+            <p class="when">11 Sept · 9 Oct · 23 Oct · 6 Nov</p>
+          </article>
+          <article class="activity">
+            <h3>Off-campus activity</h3>
+            <p>Sports and games for community building and teamwork.</p>
+            <p class="when">13 Nov · venue TBC</p>
+          </article>
+          <article class="activity">
+            <h3>Advisor–student meetings</h3>
+            <p>Small-group or individual meetings with your instructor.</p>
+            <p class="when">20 Nov · 27 Nov · 4 Dec · 11 Dec</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="schedule">
+        <h2>Course schedule</h2>
+        <p class="section-lead">One Friday meeting each week from mid-September through mid-December.</p>
+        <table class="schedule">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Theme</th>
+              <th>Format &amp; venue</th>
+              <th>Focus</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="tomorrow">
+              <td>
+                11 Sept
+                <div class="tag tag-separate">Separate</div>
+              </td>
+              <td>Getting to know people</td>
+              <td>Designated classrooms<br />L12: Teaching D 113</td>
+              <td>Ice-breaking; meet classmates; brief course introduction</td>
+            </tr>
+            <tr>
+              <td>
+                18 Sept
+                <div class="tag tag-joint">Joint</div>
+              </td>
+              <td>My university</td>
+              <td>Conference Complex II</td>
+              <td>What university is for; stories of university life from professors</td>
+            </tr>
+            <tr>
+              <td>
+                9 Oct
+                <div class="tag tag-separate">Separate</div>
+              </td>
+              <td>Studying at SDS — What and Why</td>
+              <td>Designated classrooms</td>
+              <td>What you will study at SDS, and why it matters</td>
+            </tr>
+            <tr>
+              <td>
+                16 Oct
+                <div class="tag tag-joint">Joint</div>
+              </td>
+              <td>Decode, Connect, Adapt: Personality Types at University</td>
+              <td>Liwen Hall</td>
+              <td>Personality types (e.g. MBTI), common misconceptions, study and career</td>
+            </tr>
+            <tr>
+              <td>
+                23 Oct
+                <div class="tag tag-separate">Separate</div>
+              </td>
+              <td>Studying at SDS — How</td>
+              <td>Designated classrooms</td>
+              <td>Adapting to university learning; tips; co-curricular opportunities</td>
+            </tr>
+            <tr>
+              <td>
+                30 Oct
+                <div class="tag tag-joint">Joint</div>
+              </td>
+              <td>A.I. and Its Challenges</td>
+              <td>Liwen Hall</td>
+              <td>What learning means; why AI cannot replace human learning</td>
+            </tr>
+            <tr>
+              <td>
+                6 Nov
+                <div class="tag tag-separate">Separate</div>
+              </td>
+              <td>My own study plan</td>
+              <td>Designated classrooms</td>
+              <td>Draft your study and activity plan; share and listen</td>
+            </tr>
+            <tr>
+              <td>
+                13 Nov
+                <div class="tag tag-joint">Joint</div>
+              </td>
+              <td>Off-campus activities</td>
+              <td>Venue TBC</td>
+              <td>Fun, recharge, and teamwork</td>
+            </tr>
+            <tr>
+              <td>
+                20 Nov – 11 Dec
+                <div class="tag tag-small">Small group</div>
+              </td>
+              <td>Advisor–student meetings</td>
+              <td>Designated classrooms</td>
+              <td>Details arranged by your instructor (20 Nov, 27 Nov, 4 Dec, 11 Dec)</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="speakers">
+        <h2>Invited speakers</h2>
+        <p class="section-lead">Two joint-session talks with external guests.</p>
+        <div class="speakers">
+          <article class="speaker">
+            <div>
+              <time datetime="2026-10-16">16 Oct 2026</time>
+              <span class="tag tag-joint">Liwen Hall</span>
+            </div>
+            <div>
+              <h3>Decode, Connect, Adapt: Using Personality Types at University</h3>
+              <p>Dr. Yiu Man Lam · CLEAR, CUHK</p>
+            </div>
+          </article>
+          <article class="speaker">
+            <div>
+              <time datetime="2026-10-30">30 Oct 2026</time>
+              <span class="tag tag-joint">Liwen Hall</span>
+            </div>
+            <div>
+              <h3>A.I. and Its Challenges — Humanistic Perspectives</h3>
+              <p>
+                Prof. Paolo Di Leo · Philosophy, Singapore University of Technology and Design
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="assessment">
+        <h2>Requirement and assessment</h2>
+        <p class="section-lead">
+          DDA1000 is a <strong>one-unit required course</strong> for students majoring in CSE,
+          DSBDT, or STA. Grading is <strong>Pass / Fail</strong>.
+        </p>
+        <p class="pass-note">
+          To pass, you must meet <strong>all</strong> of the requirements below.
+        </p>
+        <table class="req-table">
+          <thead>
+            <tr>
+              <th>Learning activity</th>
+              <th>What you must do</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>4 joint-session events<br />(18 Sept, 16 Oct, 30 Oct, 13 Nov)</td>
+              <td>Attend <strong>2 or more</strong></td>
+            </tr>
+            <tr>
+              <td>4 separate-session meetings<br />(11 Sept, 9 Oct, 23 Oct, 6 Nov)</td>
+              <td>Attend <strong>3 or more</strong></td>
+            </tr>
+            <tr>
+              <td>In-person meeting with advisors</td>
+              <td>Attend at the scheduled time</td>
+            </tr>
+            <tr>
+              <td>Course journal</td>
+              <td>Submit before the deadline</td>
+            </tr>
+            <tr>
+              <td>Short survey on academic honesty</td>
+              <td>Complete during the required period</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="journal">
+        <h2>Course journal</h2>
+        <p class="section-lead">
+          One journal per student — a record of your thoughts, reflections, views, and feelings
+          across the course and your first term.
+        </p>
+        <ul class="journal-steps">
+          <li><strong>First submission:</strong> 30 October 2026 (returned to you on 6 November)</li>
+          <li><strong>Final submission:</strong> 11 December 2026</li>
+          <li>
+            SDS will keep your journal for four years and return it to you at graduation.
+          </li>
+        </ul>
+      </section>
+
+      <footer>
+        <p>
+          DDA1000 · Session L12 · Academic advisor 曾家炜 (Ka Wai Tsang) · Peer advisors 张雅婧,
+          吴蔡延, 梁心睿
+        </p>
+        <p>
+          <a href="https://dda1000-cat.onrender.com">Open the Class Attending Table</a>
+          for tomorrow’s seating · Source materials on
+          <a href="https://github.com/kwtsang101016/dda1000">GitHub</a>
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
