@@ -130,6 +130,13 @@ async function main(): Promise<void> {
   personIds = new Set(roster.people.map((person) => person.id));
   state = await loadState();
 
+  // Migrate previous default layout (5×8) to the classroom layout (4×10).
+  if (state.studentRowCount === 5 && state.seatsPerRow === 8) {
+    state = setLayout(state, 4, 10);
+    await persistState(state);
+    console.log("Updated classroom layout default to 4 student rows × 10 seats.");
+  }
+
   if (INSTRUCTOR_PIN === DEFAULT_PIN) {
     console.warn(
       `INSTRUCTOR_PIN is still the default ("${DEFAULT_PIN}"). Set INSTRUCTOR_PIN on Render before class.`,

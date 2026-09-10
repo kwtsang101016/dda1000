@@ -14,8 +14,8 @@ export const EMPTY_PROFILE: PersonProfile = {
 };
 
 export const DEFAULT_STATE: ClassroomState = {
-  studentRowCount: 5,
-  seatsPerRow: 8,
+  studentRowCount: 4,
+  seatsPerRow: 10,
   placements: {},
   profiles: {},
 };
