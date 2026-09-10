@@ -62,13 +62,13 @@ npm start
 2. Root Directory: `cat`
 3. Build: `npm install && npm run build` · Start: `npm start`
 4. Set `INSTRUCTOR_PIN` in the Render dashboard (do not commit the real PIN)
-5. **Required for keeping seats/profiles after redeploy:** create a free [Upstash Redis](https://upstash.com/) database, then set on Render:
+5. **Required for keeping name-card edits after redeploy:** create a free [Upstash Redis](https://upstash.com/) database, then set on Render:
    - `UPSTASH_REDIS_REST_URL`
    - `UPSTASH_REDIS_REST_TOKEN`
 6. Confirm `/health` returns `"durableStore": true`
 7. Share the Render URL with the class
 
-Without Upstash, Render’s free disk is wiped on every deploy — student seating and name-card edits are lost. Wake the free-tier service a few minutes before class.
+Redis is written when someone **edits a name card** (photo / college / country / hobbies), and once more on graceful shutdown (Render redeploy). Sit / move / stand do **not** call Redis — those stay in memory for the live class. Without Upstash, profile edits are still lost on redeploy. Wake the free-tier service a few minutes before class.
 
 ## Roster files
 

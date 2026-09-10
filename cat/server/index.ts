@@ -95,9 +95,9 @@ async function loadState(): Promise<ClassroomState> {
   return loadClassroomState(statePath);
 }
 
-async function persistState(next: ClassroomState): Promise<void> {
+async function persistState(next: ClassroomState, durable = false): Promise<void> {
   try {
-    await persistClassroomState(statePath, next);
+    await persistClassroomState(statePath, next, { durable });
   } catch (error) {
     console.error("Failed to persist classroom state:", error);
   }
@@ -116,7 +116,7 @@ async function main(): Promise<void> {
   // Migrate previous default layout (5×8) to the classroom layout (4×10).
   if (state.studentRowCount === 5 && state.seatsPerRow === 8) {
     state = setLayout(state, 4, 10);
-    await persistState(state);
+    await persistState(state, true);
     console.log("Updated classroom layout default to 4 student rows × 10 seats.");
   }
 
@@ -307,7 +307,8 @@ async function main(): Promise<void> {
         requireControl(socket, personId);
         const normalized = normalizeProfile(profile);
         state = updateProfile(state, personId, normalized);
-        await persistState(state);
+        // Photos / college / country / hobbies: write through to Redis immediately.
+        await persistState(state, true);
         emitState();
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not save the name card.";
@@ -331,6 +332,23 @@ async function main(): Promise<void> {
       socket.broadcast.emit("presence", { connectedCount: Math.max(0, io.engine.clientsCount) });
     });
   });
+
+  const flushDurable = async (reason: string): Promise<void> => {
+    try {
+      await persistState(state, true);
+      console.log(`Flushed classroom state to Redis (${reason}).`);
+    } catch (error) {
+      console.error(`Failed to flush classroom state on ${reason}:`, error);
+    }
+  };
+
+  for (const signal of ["SIGTERM", "SIGINT"] as const) {
+    process.on(signal, () => {
+      void flushDurable(signal).finally(() => {
+        process.exit(0);
+      });
+    });
+  }
 
   httpServer.on("error", (error) => {
     console.error("Classroom server failed:", error);

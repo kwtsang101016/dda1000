@@ -9,6 +9,14 @@ import type { ClassroomState } from "../shared/types.ts";
 
 const STATE_KEY = "dda1000:classroom-state";
 
+export interface PersistOptions {
+  /**
+   * Write to Upstash Redis. Use for profile edits and graceful shutdown.
+   * Seat moves stay in memory (+ local file) so Redis is not hit every tap.
+   */
+  durable?: boolean;
+}
+
 function redisConfigured(): boolean {
   return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
 }
@@ -94,7 +102,6 @@ export async function loadClassroomState(statePath: string): Promise<ClassroomSt
   }
   const fromFile = await loadFromFile(statePath);
   if (fromFile) {
-    // If Redis is configured but empty, seed it from the local file.
     try {
       await saveToRedis(fromFile);
     } catch (error) {
@@ -105,9 +112,14 @@ export async function loadClassroomState(statePath: string): Promise<ClassroomSt
   return DEFAULT_STATE;
 }
 
-export async function persistClassroomState(statePath: string, state: ClassroomState): Promise<void> {
+export async function persistClassroomState(
+  statePath: string,
+  state: ClassroomState,
+  options: PersistOptions = {},
+): Promise<void> {
+  const durable = options.durable === true;
   const tasks: Promise<void>[] = [saveToFile(statePath, state)];
-  if (redisConfigured()) {
+  if (durable && redisConfigured()) {
     tasks.push(
       saveToRedis(state).catch((error) => {
         console.error("Failed to persist classroom state to Redis:", error);
