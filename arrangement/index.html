@@ -367,14 +367,25 @@
         margin: 8px 0;
       }
 
+      .journal-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+        gap: 20px;
+        align-items: start;
+      }
+
+      .journal-cover {
+        width: 100%;
+        max-width: 220px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        display: block;
+      }
+
       footer {
         padding: 28px 0 48px;
         color: var(--muted);
         font-size: 0.92rem;
-      }
-
-      footer a {
-        font-weight: 600;
       }
 
       @media (max-width: 760px) {
@@ -391,6 +402,10 @@
 
         .speaker__meta {
           grid-column: 1 / -1;
+        }
+
+        .journal-layout {
+          grid-template-columns: 1fr;
         }
 
         .schedule {
@@ -704,24 +719,28 @@
           One journal per student — a record of your thoughts, reflections, views, and feelings
           across the course and your first term.
         </p>
-        <ul class="journal-steps">
-          <li><strong>First submission:</strong> 30 October 2026 (returned to you on 6 November)</li>
-          <li><strong>Final submission:</strong> 11 December 2026</li>
-          <li>
-            SDS will keep your journal for four years and return it to you at graduation.
-          </li>
-        </ul>
+        <div class="journal-layout">
+          <img
+            class="journal-cover"
+            src="./photos/journal-cover.png"
+            alt="DDA1000 course journal cover"
+            width="220"
+            height="300"
+          />
+          <ul class="journal-steps">
+            <li><strong>First submission:</strong> 30 October 2026 (returned to you on 6 November)</li>
+            <li><strong>Final submission:</strong> 11 December 2026</li>
+            <li>
+              SDS will keep your journal for four years and return it to you at graduation.
+            </li>
+          </ul>
+        </div>
       </section>
 
       <footer>
         <p>
           DDA1000 · Session L12 · Academic advisor 曾家炜 (Ka Wai Tsang) · Peer advisors 张雅婧,
           吴蔡延, 梁心睿
-        </p>
-        <p>
-          <a href="/">Open the Class Attending Table</a>
-          for tomorrow’s seating · Source materials on
-          <a href="https://github.com/kwtsang101016/dda1000">GitHub</a>
         </p>
       </footer>
     </div>
