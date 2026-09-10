@@ -1,14 +1,23 @@
-import type { ClassroomState, SeatRef, Zone } from "./types.ts";
+import type { ClassroomState, PersonProfile, SeatRef, Zone } from "./types.ts";
+import { MAX_PHOTO_DATA_URL_LENGTH, MAX_PROFILE_TEXT_LENGTH } from "./types.ts";
 
 export const MIN_STUDENT_ROWS = 1;
 export const MAX_STUDENT_ROWS = 12;
 export const MIN_SEATS_PER_ROW = 4;
 export const MAX_SEATS_PER_ROW = 16;
 
+export const EMPTY_PROFILE: PersonProfile = {
+  college: "",
+  country: "",
+  hobbies: "",
+  photoDataUrl: "",
+};
+
 export const DEFAULT_STATE: ClassroomState = {
   studentRowCount: 5,
   seatsPerRow: 8,
   placements: {},
+  profiles: {},
 };
 
 export function cloneState(state: ClassroomState): ClassroomState {
@@ -16,6 +25,7 @@ export function cloneState(state: ClassroomState): ClassroomState {
     studentRowCount: state.studentRowCount,
     seatsPerRow: state.seatsPerRow,
     placements: { ...state.placements },
+    profiles: { ...state.profiles },
   };
 }
 
@@ -122,6 +132,7 @@ export function resetSeating(state: ClassroomState): ClassroomState {
     studentRowCount: state.studentRowCount,
     seatsPerRow: state.seatsPerRow,
     placements: {},
+    profiles: { ...state.profiles },
   };
 }
 
@@ -134,6 +145,71 @@ export function isSeatRef(value: unknown): value is SeatRef {
     (ref.zone === "advisor" || ref.zone === "student") &&
     Number.isInteger(ref.row) &&
     Number.isInteger(ref.seat)
+  );
+}
+
+function clipText(value: unknown): string {
+  if (typeof value !== "string") {
+    return "";
+  }
+  return value.trim().slice(0, MAX_PROFILE_TEXT_LENGTH);
+}
+
+function normalizePhoto(value: unknown): string {
+  if (typeof value !== "string" || value.length === 0) {
+    return "";
+  }
+  if (value.length > MAX_PHOTO_DATA_URL_LENGTH) {
+    throw new Error("Photo is too large. Please use a smaller image.");
+  }
+  if (!/^data:image\/(jpeg|jpg|png|webp);base64,/i.test(value)) {
+    throw new Error("Photo must be a JPEG, PNG, or WebP image.");
+  }
+  return value;
+}
+
+export function normalizeProfile(input: unknown): PersonProfile {
+  if (typeof input !== "object" || input === null) {
+    throw new Error("Invalid profile.");
+  }
+  const raw = input as Record<string, unknown>;
+  return {
+    college: clipText(raw.college),
+    country: clipText(raw.country),
+    hobbies: clipText(raw.hobbies),
+    photoDataUrl: normalizePhoto(raw.photoDataUrl ?? ""),
+  };
+}
+
+export function updateProfile(
+  state: ClassroomState,
+  personId: string,
+  profile: PersonProfile,
+): ClassroomState {
+  const next = cloneState(state);
+  const isEmpty =
+    !profile.college && !profile.country && !profile.hobbies && !profile.photoDataUrl;
+  if (isEmpty) {
+    delete next.profiles[personId];
+  } else {
+    next.profiles[personId] = profile;
+  }
+  return next;
+}
+
+export function isPersonProfile(value: unknown): value is PersonProfile {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const profile = value as PersonProfile;
+  return (
+    typeof profile.college === "string" &&
+    typeof profile.country === "string" &&
+    typeof profile.hobbies === "string" &&
+    typeof profile.photoDataUrl === "string" &&
+    profile.photoDataUrl.length <= MAX_PHOTO_DATA_URL_LENGTH &&
+    (profile.photoDataUrl === "" ||
+      /^data:image\/(jpeg|jpg|png|webp);base64,/i.test(profile.photoDataUrl))
   );
 }
 
@@ -155,5 +231,26 @@ export function isClassroomState(value: unknown): value is ClassroomState {
       return false;
     }
   }
+  if (state.profiles === undefined) {
+    return true;
+  }
+  if (typeof state.profiles !== "object" || state.profiles === null) {
+    return false;
+  }
+  for (const profile of Object.values(state.profiles)) {
+    if (!isPersonProfile(profile)) {
+      return false;
+    }
+  }
   return true;
+}
+
+/** Migrate older saved state that lacked profiles. */
+export function normalizeLoadedState(value: ClassroomState): ClassroomState {
+  return {
+    studentRowCount: value.studentRowCount,
+    seatsPerRow: value.seatsPerRow,
+    placements: value.placements,
+    profiles: value.profiles ?? {},
+  };
 }

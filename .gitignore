@@ -1,8 +1,9 @@
 # Local leftovers from before CAT moved into cat/
-node_modules/
-dist/
-data/
-src/
+/node_modules/
+/dist/
+/data/
+/src/
+/Kawai.png
 
 # OS / editor
 .DS_Store

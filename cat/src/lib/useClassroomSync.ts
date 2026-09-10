@@ -1,7 +1,12 @@
 import { io, type Socket } from "socket.io-client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_STATE } from "../../shared/seating.ts";
-import type { ClassroomState, SeatRef, ServerSnapshot } from "../../shared/types.ts";
+import type {
+  ClassroomState,
+  PersonProfile,
+  SeatRef,
+  ServerSnapshot,
+} from "../../shared/types.ts";
 
 type ConnectionStatus = "connecting" | "live" | "reconnecting" | "offline";
 
@@ -14,6 +19,7 @@ interface ClassroomSync {
   place: (personId: string, target: SeatRef) => void;
   unseat: (personId: string) => void;
   setLayout: (studentRowCount: number, seatsPerRow: number) => void;
+  updateProfile: (personId: string, profile: PersonProfile) => void;
   reset: () => void;
 }
 
@@ -36,7 +42,10 @@ export function useClassroomSync(): ClassroomSync {
     socketRef.current = socket;
 
     const onSnapshot = (snapshot: ServerSnapshot) => {
-      setState(snapshot.state);
+      setState({
+        ...snapshot.state,
+        profiles: snapshot.state.profiles ?? {},
+      });
       setConnectedCount(snapshot.connectedCount);
       setStatus("live");
     };
@@ -81,6 +90,9 @@ export function useClassroomSync(): ClassroomSync {
       },
       setLayout: (studentRowCount, seatsPerRow) => {
         socketRef.current?.emit("setLayout", { studentRowCount, seatsPerRow });
+      },
+      updateProfile: (personId, profile) => {
+        socketRef.current?.emit("updateProfile", { personId, profile });
       },
       reset: () => {
         socketRef.current?.emit("reset");

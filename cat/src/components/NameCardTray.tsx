@@ -1,13 +1,15 @@
-import { useDroppable } from "@dnd-kit/core";
-import type { Person } from "../../shared/types.ts";
-import { DraggableNameCard } from "./NameCard.tsx";
+import type { DisplayPerson } from "../lib/people.ts";
+import { NameCard } from "./NameCard.tsx";
 
 interface NameCardTrayProps {
-  advisors: Person[];
-  peerAdvisors: Person[];
-  students: Person[];
+  advisors: DisplayPerson[];
+  peerAdvisors: DisplayPerson[];
+  students: DisplayPerson[];
   query: string;
+  selectedId: string | null;
   onQueryChange: (value: string) => void;
+  onSelect: (personId: string) => void;
+  onEdit: (personId: string) => void;
 }
 
 export function NameCardTray({
@@ -15,17 +17,23 @@ export function NameCardTray({
   peerAdvisors,
   students,
   query,
+  selectedId,
   onQueryChange,
+  onSelect,
+  onEdit,
 }: NameCardTrayProps) {
-  const { isOver, setNodeRef } = useDroppable({ id: "tray" });
   const total = advisors.length + peerAdvisors.length + students.length;
 
   return (
-    <aside className={["tray", isOver ? "tray--over" : ""].filter(Boolean).join(" ")} ref={setNodeRef}>
+    <aside className="tray">
       <div className="tray__header">
         <h2>Name cards</h2>
-        <p>{total} waiting to sit</p>
+        <p>{total} waiting</p>
       </div>
+      <p className="tray__hint">
+        Tap a card, then tap a seat. Double-tap a seated card to stand up. Press and hold a seat to
+        enlarge the name.
+      </p>
       <label className="tray__search">
         <span>Find your name</span>
         <input
@@ -36,9 +44,30 @@ export function NameCardTray({
           autoComplete="off"
         />
       </label>
-      <TrayGroup title="Academic advisor" people={advisors} query={query} />
-      <TrayGroup title="Peer advisors" people={peerAdvisors} query={query} />
-      <TrayGroup title="Students" people={students} query={query} />
+      <TrayGroup
+        title="Academic advisor"
+        people={advisors}
+        query={query}
+        selectedId={selectedId}
+        onSelect={onSelect}
+        onEdit={onEdit}
+      />
+      <TrayGroup
+        title="Peer advisors"
+        people={peerAdvisors}
+        query={query}
+        selectedId={selectedId}
+        onSelect={onSelect}
+        onEdit={onEdit}
+      />
+      <TrayGroup
+        title="Students"
+        people={students}
+        query={query}
+        selectedId={selectedId}
+        onSelect={onSelect}
+        onEdit={onEdit}
+      />
       {total === 0 ? (
         <p className="tray__empty">
           {query.trim() ? "No matching unused cards." : "Everyone is seated."}
@@ -48,7 +77,21 @@ export function NameCardTray({
   );
 }
 
-function TrayGroup({ title, people, query }: { title: string; people: Person[]; query: string }) {
+function TrayGroup({
+  title,
+  people,
+  query,
+  selectedId,
+  onSelect,
+  onEdit,
+}: {
+  title: string;
+  people: DisplayPerson[];
+  query: string;
+  selectedId: string | null;
+  onSelect: (personId: string) => void;
+  onEdit: (personId: string) => void;
+}) {
   if (people.length === 0) {
     return null;
   }
@@ -60,13 +103,29 @@ function TrayGroup({ title, people, query }: { title: string; people: Person[]; 
         <span>{people.length}</span>
       </h3>
       <div className="tray-group__cards">
-        {people.map((person) => (
-          <DraggableNameCard
-            key={person.id}
-            person={person}
-            highlighted={query.trim().length > 0}
-          />
-        ))}
+        {people.map((person) => {
+          const selected = selectedId === person.id;
+          return (
+            <div key={person.id} className={["tray-card", selected ? "tray-card--selected" : ""].filter(Boolean).join(" ")}>
+              <button
+                type="button"
+                className="name-card-handle"
+                onClick={() => onSelect(person.id)}
+                aria-pressed={selected}
+                aria-label={`Select ${person.name}`}
+              >
+                <NameCard
+                  person={person}
+                  selected={selected}
+                  highlighted={query.trim().length > 0}
+                />
+              </button>
+              <button type="button" className="tray-card__edit" onClick={() => onEdit(person.id)}>
+                Edit
+              </button>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

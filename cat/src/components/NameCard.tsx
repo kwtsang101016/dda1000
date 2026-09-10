@@ -1,16 +1,20 @@
-import type { CSSProperties } from "react";
-import { useDraggable } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
-import type { Person } from "../../shared/types.ts";
+import type { DisplayPerson } from "../lib/people.ts";
 
 interface NameCardProps {
-  person: Person;
+  person: DisplayPerson;
   compact?: boolean;
-  overlay?: boolean;
+  enlarged?: boolean;
+  selected?: boolean;
   highlighted?: boolean;
 }
 
-export function NameCard({ person, compact = false, overlay = false, highlighted = false }: NameCardProps) {
+export function NameCard({
+  person,
+  compact = false,
+  enlarged = false,
+  selected = false,
+  highlighted = false,
+}: NameCardProps) {
   const roleLabel =
     person.role === "aa" ? "AA" : person.role === "pa" ? (person.leading ? "PA · lead" : "PA") : "Student";
 
@@ -20,48 +24,37 @@ export function NameCard({ person, compact = false, overlay = false, highlighted
         "name-card",
         `name-card--${person.role}`,
         compact ? "name-card--compact" : "",
-        overlay ? "name-card--overlay" : "",
+        enlarged ? "name-card--enlarged" : "",
+        selected ? "name-card--selected" : "",
         highlighted ? "name-card--highlighted" : "",
+        person.displayPhoto ? "name-card--has-photo" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      <span className="name-card__role">{roleLabel}</span>
-      <h3 className="name-card__name">{person.name}</h3>
-      {person.englishName ? <p className="name-card__english">{person.englishName}</p> : null}
-      {person.studentId ? <p className="name-card__meta">{person.studentId}</p> : null}
+      {person.displayPhoto ? (
+        <img className="name-card__photo" src={person.displayPhoto} alt="" draggable={false} />
+      ) : null}
+      <div className="name-card__body">
+        <span className="name-card__role">{roleLabel}</span>
+        <h3 className="name-card__name">{person.name}</h3>
+        {person.englishName && !compact ? (
+          <p className="name-card__english">{person.englishName}</p>
+        ) : null}
+        {compact ? null : (
+          <>
+            {person.studentId ? <p className="name-card__meta">{person.studentId}</p> : null}
+            {person.displayCollege ? <p className="name-card__meta">{person.displayCollege}</p> : null}
+            {person.displayCountry ? <p className="name-card__meta">{person.displayCountry}</p> : null}
+            {person.displayHobbies ? <p className="name-card__meta">{person.displayHobbies}</p> : null}
+          </>
+        )}
+        {compact && (person.displayCollege || person.displayCountry) ? (
+          <p className="name-card__meta name-card__meta--tight">
+            {[person.displayCollege, person.displayCountry].filter(Boolean).join(" · ")}
+          </p>
+        ) : null}
+      </div>
     </article>
-  );
-}
-
-interface DraggableNameCardProps {
-  person: Person;
-  compact?: boolean;
-  highlighted?: boolean;
-}
-
-export function DraggableNameCard({ person, compact, highlighted }: DraggableNameCardProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: person.id,
-    data: { personId: person.id },
-  });
-
-  const style: CSSProperties = {
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.35 : 1,
-  };
-
-  return (
-    <button
-      type="button"
-      className="name-card-handle"
-      ref={setNodeRef}
-      style={style}
-      aria-label={`Move ${person.name}`}
-      {...listeners}
-      {...attributes}
-    >
-      <NameCard person={person} compact={compact} highlighted={highlighted} />
-    </button>
   );
 }

@@ -1,6 +1,14 @@
 # DDA1000 Class Attending Table
 
-Realtime seating board for lecture **L12** (academic advisor 曾家炜 / Ka Wai Tsang). Students find their name card on the side and drag it onto a seat. Everyone looking at the page sees the table update immediately.
+Realtime seating board for lecture **L12** (academic advisor 曾家炜 / Ka Wai Tsang). Students find their name card on the side, tap it, then tap a seat. Everyone looking at the page sees the table update immediately.
+
+Phone-friendly controls:
+
+1. Tap a name card, then tap a seat to sit
+2. Tap a seated card, then another empty seat to move
+3. Double-tap a seated card to stand up
+4. Press and hold a seat to enlarge the name
+5. Use **Edit** on a card to add college, country, hobbies, or a photo
 
 Layout:
 

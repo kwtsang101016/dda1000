@@ -10,10 +10,13 @@ import {
   DEFAULT_STATE,
   isClassroomState,
   isSeatRef,
+  normalizeLoadedState,
+  normalizeProfile,
   placePerson,
   resetSeating,
   setLayout,
   unseatPerson,
+  updateProfile,
 } from "../shared/seating.ts";
 import type { ClassroomState, Roster, ServerSnapshot } from "../shared/types.ts";
 
@@ -51,7 +54,7 @@ async function loadState(): Promise<ClassroomState> {
       console.warn("Stored classroom state was invalid; using defaults.");
       return DEFAULT_STATE;
     }
-    return parsed;
+    return normalizeLoadedState(parsed);
   } catch (error) {
     const code = (error as NodeJS.ErrnoException).code;
     if (code !== "ENOENT") {
@@ -82,6 +85,7 @@ async function main(): Promise<void> {
   const app = express();
   app.disable("x-powered-by");
   app.use(cors({ origin: true }));
+  app.use(express.json({ limit: "250kb" }));
 
   app.get("/health", (_req, res) => {
     res.json({ ok: true, course: roster.course, section: roster.section });
@@ -112,6 +116,7 @@ async function main(): Promise<void> {
     cors: { origin: true },
     pingInterval: 8000,
     pingTimeout: 15000,
+    maxHttpBufferSize: 3e5,
   });
 
   const emitState = (): void => {
@@ -178,6 +183,25 @@ async function main(): Promise<void> {
         emitState();
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not update the layout.";
+        socket.emit("error-message", message);
+      }
+    });
+
+    socket.on("updateProfile", async (payload: unknown) => {
+      try {
+        if (typeof payload !== "object" || payload === null) {
+          throw new Error("Invalid profile payload.");
+        }
+        const { personId, profile } = payload as { personId?: unknown; profile?: unknown };
+        if (typeof personId !== "string" || !personIds.has(personId)) {
+          throw new Error("Unknown name card.");
+        }
+        const normalized = normalizeProfile(profile);
+        state = updateProfile(state, personId, normalized);
+        await persistState(state);
+        emitState();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Could not save the name card.";
         socket.emit("error-message", message);
       }
     });

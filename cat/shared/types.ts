@@ -7,10 +7,19 @@ export interface SeatRef {
   seat: number;
 }
 
+export interface PersonProfile {
+  college: string;
+  country: string;
+  hobbies: string;
+  /** Compressed data URL, or empty to clear an override. */
+  photoDataUrl: string;
+}
+
 export interface ClassroomState {
   studentRowCount: number;
   seatsPerRow: number;
   placements: Record<string, SeatRef>;
+  profiles: Record<string, PersonProfile>;
 }
 
 export interface Person {
@@ -21,6 +30,10 @@ export interface Person {
   role: Role;
   college: string;
   plan: string;
+  country?: string;
+  hobbies?: string;
+  /** Static default photo path, e.g. /photos/aa-tsang.png */
+  photo?: string;
   leading?: boolean;
 }
 
@@ -31,13 +44,10 @@ export interface Roster {
   people: Person[];
 }
 
-export type ClientEvent =
-  | { type: "place"; personId: string; target: SeatRef }
-  | { type: "unseat"; personId: string }
-  | { type: "setLayout"; studentRowCount: number; seatsPerRow: number }
-  | { type: "reset" };
-
 export interface ServerSnapshot {
   state: ClassroomState;
   connectedCount: number;
 }
+
+export const MAX_PHOTO_DATA_URL_LENGTH = 180_000;
+export const MAX_PROFILE_TEXT_LENGTH = 80;
