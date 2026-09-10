@@ -91,7 +91,7 @@ export function AuthModal({
         <label className="field">
           {asInstructor || requiresInstructorOnly ? "Instructor PIN" : "Student ID"}
           <input
-            type="text"
+            type="password"
             inputMode="numeric"
             autoComplete="off"
             autoCorrect="off"
