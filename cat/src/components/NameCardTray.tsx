@@ -32,7 +32,7 @@ export function NameCardTray({
       </div>
       <p className="tray__hint">
         Tap a card, then tap a seat. Double-tap a seated card to stand up. Press and hold a seat to
-        enlarge the name.
+        see photo and details.
       </p>
       <label className="tray__search">
         <span>Find your name</span>

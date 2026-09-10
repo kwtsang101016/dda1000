@@ -184,7 +184,7 @@ export default function App() {
       ) : (
         <p className="howto">
           Phone-friendly: tap a name card, then tap a seat. Double-tap a seated name to cancel.
-          Press and hold a seat to enlarge the name.
+          Press and hold a seat to see the full card. Seats show the name only.
         </p>
       )}
 

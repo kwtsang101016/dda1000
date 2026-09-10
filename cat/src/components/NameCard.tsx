@@ -2,7 +2,9 @@ import type { DisplayPerson } from "../lib/people.ts";
 
 interface NameCardProps {
   person: DisplayPerson;
+  /** Seat tile: name only. */
   compact?: boolean;
+  /** Press-and-hold preview: full details. */
   enlarged?: boolean;
   selected?: boolean;
   highlighted?: boolean;
@@ -18,12 +20,29 @@ export function NameCard({
   const roleLabel =
     person.role === "aa" ? "AA" : person.role === "pa" ? (person.leading ? "PA · lead" : "PA") : "Student";
 
+  if (compact && !enlarged) {
+    return (
+      <article
+        className={[
+          "name-card",
+          "name-card--compact",
+          `name-card--${person.role}`,
+          selected ? "name-card--selected" : "",
+          highlighted ? "name-card--highlighted" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <h3 className="name-card__name">{person.name}</h3>
+      </article>
+    );
+  }
+
   return (
     <article
       className={[
         "name-card",
         `name-card--${person.role}`,
-        compact ? "name-card--compact" : "",
         enlarged ? "name-card--enlarged" : "",
         selected ? "name-card--selected" : "",
         highlighted ? "name-card--highlighted" : "",
@@ -38,22 +57,11 @@ export function NameCard({
       <div className="name-card__body">
         <span className="name-card__role">{roleLabel}</span>
         <h3 className="name-card__name">{person.name}</h3>
-        {person.englishName && !compact ? (
-          <p className="name-card__english">{person.englishName}</p>
-        ) : null}
-        {compact ? null : (
-          <>
-            {person.studentId ? <p className="name-card__meta">{person.studentId}</p> : null}
-            {person.displayCollege ? <p className="name-card__meta">{person.displayCollege}</p> : null}
-            {person.displayCountry ? <p className="name-card__meta">{person.displayCountry}</p> : null}
-            {person.displayHobbies ? <p className="name-card__meta">{person.displayHobbies}</p> : null}
-          </>
-        )}
-        {compact && (person.displayCollege || person.displayCountry) ? (
-          <p className="name-card__meta name-card__meta--tight">
-            {[person.displayCollege, person.displayCountry].filter(Boolean).join(" · ")}
-          </p>
-        ) : null}
+        {person.englishName ? <p className="name-card__english">{person.englishName}</p> : null}
+        {person.studentId ? <p className="name-card__meta">{person.studentId}</p> : null}
+        {person.displayCollege ? <p className="name-card__meta">{person.displayCollege}</p> : null}
+        {person.displayCountry ? <p className="name-card__meta">{person.displayCountry}</p> : null}
+        {person.displayHobbies ? <p className="name-card__meta">{person.displayHobbies}</p> : null}
       </div>
     </article>
   );

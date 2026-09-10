@@ -384,19 +384,6 @@ h1 {
   background: #ddd;
 }
 
-.name-card--compact .name-card__photo {
-  width: 100%;
-  height: 42%;
-  max-height: 34px;
-  border-radius: 1px;
-}
-
-.name-card--compact.name-card--has-photo {
-  flex-direction: column;
-  gap: 2px;
-  padding: 2px;
-}
-
 .name-card--enlarged .name-card__photo {
   width: 72px;
   height: 72px;
@@ -436,32 +423,23 @@ h1 {
   color: var(--muted);
 }
 
-.name-card__meta--tight {
-  font-size: 8px;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .name-card--compact {
   min-height: 0;
-  padding: 3px 4px;
-  flex-direction: column;
-}
-
-.name-card--compact .name-card__role {
-  font-size: 7px;
+  padding: 2px 3px;
+  display: grid;
+  place-items: center;
+  text-align: center;
 }
 
 .name-card--compact .name-card__name {
-  font-size: clamp(9px, 1.35vw, 13px);
+  font-size: clamp(10px, 1.4vw, 14px);
   margin-top: 0;
   white-space: normal;
   line-height: 1.15;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  width: 100%;
 }
 
 .name-card--enlarged .name-card__name {
