@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { PersonProfile } from "../../shared/types.ts";
 import { compressImageFile, type DisplayPerson } from "../lib/people.ts";
 
@@ -28,7 +29,7 @@ export function ProfileEditor({ person, onClose, onSave }: ProfileEditorProps) {
 
   const preview = photoDataUrl || person.photo || "";
 
-  return (
+  return createPortal(
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
       <div
         className="modal"
@@ -79,11 +80,7 @@ export function ProfileEditor({ person, onClose, onSave }: ProfileEditorProps) {
               />
             </label>
             {photoDataUrl ? (
-              <button
-                type="button"
-                className="ghost-button"
-                onClick={() => setPhotoDataUrl("")}
-              >
+              <button type="button" className="ghost-button" onClick={() => setPhotoDataUrl("")}>
                 Remove uploaded photo
               </button>
             ) : null}
@@ -126,6 +123,7 @@ export function ProfileEditor({ person, onClose, onSave }: ProfileEditorProps) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
