@@ -295,11 +295,21 @@
 
       .speaker {
         display: grid;
-        grid-template-columns: 140px 1fr;
+        grid-template-columns: 96px 140px 1fr;
         gap: 16px;
+        align-items: center;
         background: var(--panel);
         border: 1px solid var(--line);
         padding: 16px 18px;
+      }
+
+      .speaker__photo {
+        width: 96px;
+        height: 96px;
+        object-fit: cover;
+        object-position: center top;
+        border: 1px solid var(--line);
+        background: #e7e2d8;
       }
 
       .speaker time {
@@ -371,7 +381,16 @@
         .facts,
         .activity-grid,
         .speaker {
-          grid-template-columns: 1fr;
+          grid-template-columns: 96px 1fr;
+        }
+
+        .speaker time,
+        .speaker .tag {
+          grid-column: 2;
+        }
+
+        .speaker__meta {
+          grid-column: 1 / -1;
         }
 
         .schedule {
@@ -600,21 +619,35 @@
         <p class="section-lead">Two joint-session talks with external guests.</p>
         <div class="speakers">
           <article class="speaker">
-            <div>
+            <img
+              class="speaker__photo"
+              src="./photos/lam.png"
+              alt="Dr. Yiu Man Lam"
+              width="96"
+              height="96"
+            />
+            <div class="speaker__when">
               <time datetime="2026-10-16">16 Oct 2026</time>
               <span class="tag tag-joint">Liwen Hall</span>
             </div>
-            <div>
+            <div class="speaker__meta">
               <h3>Decode, Connect, Adapt: Using Personality Types at University</h3>
               <p>Dr. Yiu Man Lam · CLEAR, CUHK</p>
             </div>
           </article>
           <article class="speaker">
-            <div>
+            <img
+              class="speaker__photo"
+              src="./photos/leo.png"
+              alt="Prof. Paolo Di Leo"
+              width="96"
+              height="96"
+            />
+            <div class="speaker__when">
               <time datetime="2026-10-30">30 Oct 2026</time>
               <span class="tag tag-joint">Liwen Hall</span>
             </div>
-            <div>
+            <div class="speaker__meta">
               <h3>A.I. and Its Challenges — Humanistic Perspectives</h3>
               <p>
                 Prof. Paolo Di Leo · Philosophy, Singapore University of Technology and Design
