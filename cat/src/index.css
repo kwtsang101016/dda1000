@@ -341,14 +341,25 @@ h1 {
   background: #fbf7f0;
 }
 
+.seat--holding {
+  z-index: 5;
+}
+
 .seat-preview {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%);
-  z-index: 20;
-  width: min(220px, 70vw);
+  position: fixed;
+  z-index: 9000;
+  width: min(240px, calc(100vw - 24px));
+  transform: translate(-50%, -100%);
   pointer-events: none;
+}
+
+.seat-preview--below {
+  transform: translate(-50%, 0);
+}
+
+.seat-preview .name-card {
+  border: 1px solid var(--line);
+  background: #fffaf2;
 }
 
 .name-card-handle {

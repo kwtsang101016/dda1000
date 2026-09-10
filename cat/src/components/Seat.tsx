@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { DisplayPerson } from "../lib/people.ts";
 import { NameCard } from "./NameCard.tsx";
 
@@ -24,6 +25,10 @@ export function Seat({
   onDoubleUnseat,
 }: SeatProps) {
   const [holding, setHolding] = useState(false);
+  const [previewPos, setPreviewPos] = useState<{ left: number; top: number; place: "above" | "below" } | null>(
+    null,
+  );
+  const seatRef = useRef<HTMLButtonElement | null>(null);
   const timerRef = useRef<number | null>(null);
   const heldRef = useRef(false);
 
@@ -34,7 +39,38 @@ export function Seat({
     }
   };
 
+  const updatePreviewPosition = () => {
+    const seat = seatRef.current;
+    if (!seat) {
+      return;
+    }
+    const rect = seat.getBoundingClientRect();
+    const previewHeight = 180;
+    const gap = 10;
+    const placeAbove = rect.top >= previewHeight + gap + 8;
+    setPreviewPos({
+      left: rect.left + rect.width / 2,
+      top: placeAbove ? rect.top - gap : rect.bottom + gap,
+      place: placeAbove ? "above" : "below",
+    });
+  };
+
   useEffect(() => () => clearHoldTimer(), []);
+
+  useLayoutEffect(() => {
+    if (!holding) {
+      setPreviewPos(null);
+      return;
+    }
+    updatePreviewPosition();
+    const onViewportChange = () => updatePreviewPosition();
+    window.addEventListener("resize", onViewportChange);
+    window.addEventListener("scroll", onViewportChange, true);
+    return () => {
+      window.removeEventListener("resize", onViewportChange);
+      window.removeEventListener("scroll", onViewportChange, true);
+    };
+  }, [holding]);
 
   const startHold = () => {
     if (!occupant) {
@@ -56,6 +92,7 @@ export function Seat({
   return (
     <button
       type="button"
+      ref={seatRef}
       className={[
         "seat",
         occupant ? "seat--filled" : "seat--empty",
@@ -90,11 +127,18 @@ export function Seat({
       ) : (
         <span className="seat__placeholder">sit here</span>
       )}
-      {holding && occupant ? (
-        <div className="seat-preview" role="presentation">
-          <NameCard person={occupant} enlarged />
-        </div>
-      ) : null}
+      {holding && occupant && previewPos
+        ? createPortal(
+            <div
+              className={`seat-preview seat-preview--${previewPos.place}`}
+              role="presentation"
+              style={{ left: previewPos.left, top: previewPos.top }}
+            >
+              <NameCard person={occupant} enlarged />
+            </div>,
+            document.body,
+          )
+        : null}
     </button>
   );
 }
