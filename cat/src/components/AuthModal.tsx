@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface AuthModalProps {
   personName: string;
@@ -20,14 +21,23 @@ export function AuthModal({
 }: AuthModalProps) {
   const [secret, setSecret] = useState("");
   const [asInstructor, setAsInstructor] = useState(requiresInstructorOnly);
+  const allowDismissRef = useRef(false);
 
   useEffect(() => {
     setAsInstructor(requiresInstructorOnly);
   }, [requiresInstructorOnly]);
 
   useEffect(() => {
+    allowDismissRef.current = false;
+    const timer = window.setTimeout(() => {
+      allowDismissRef.current = true;
+    }, 450);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && allowDismissRef.current) {
         onCancel();
       }
     };
@@ -35,8 +45,15 @@ export function AuthModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel]);
 
-  return (
-    <div className="modal-backdrop" role="presentation" onClick={onCancel}>
+  const dismiss = () => {
+    if (!allowDismissRef.current || busy) {
+      return;
+    }
+    onCancel();
+  };
+
+  return createPortal(
+    <div className="modal-backdrop" role="presentation" onClick={dismiss}>
       <div
         className="modal"
         role="dialog"
@@ -49,7 +66,7 @@ export function AuthModal({
             <p className="eyebrow">Verify to continue</p>
             <h2 id="auth-modal-title">{personName}</h2>
           </div>
-          <button type="button" className="ghost-button" onClick={onCancel}>
+          <button type="button" className="ghost-button" onClick={dismiss}>
             Close
           </button>
         </header>
@@ -74,11 +91,13 @@ export function AuthModal({
         <label className="field">
           {asInstructor || requiresInstructorOnly ? "Instructor PIN" : "Student ID"}
           <input
-            type="password"
+            type="text"
             inputMode="numeric"
             autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
             value={secret}
-            autoFocus
             onChange={(event) => setSecret(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter" && secret.trim()) {
@@ -91,7 +110,7 @@ export function AuthModal({
         {error ? <p className="modal__error">{error}</p> : null}
 
         <div className="modal__actions">
-          <button type="button" className="ghost-button" onClick={onCancel} disabled={busy}>
+          <button type="button" className="ghost-button" onClick={dismiss} disabled={busy}>
             Cancel
           </button>
           <button
@@ -104,6 +123,7 @@ export function AuthModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

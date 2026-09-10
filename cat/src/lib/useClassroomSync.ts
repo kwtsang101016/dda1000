@@ -121,27 +121,25 @@ export function useClassroomSync(): ClassroomSync {
       authorize: ({ personId, secret, asInstructor }) =>
         new Promise<void>((resolve, reject) => {
           const socket = socketRef.current;
-          if (!socket) {
-            reject(new Error("Not connected."));
+          if (!socket?.connected) {
+            reject(new Error("Not connected. Wait a moment and try again."));
             return;
           }
-          socket
-            .timeout(8000)
-            .emit(
-              "authorize",
-              { personId, secret, asInstructor },
-              (error: Error | null, response?: { ok: boolean; message?: string }) => {
-                if (error) {
-                  reject(error);
-                  return;
-                }
-                if (!response?.ok) {
-                  reject(new Error(response?.message || "Verification failed."));
-                  return;
-                }
-                resolve();
-              },
-            );
+          const timer = window.setTimeout(() => {
+            reject(new Error("Verification timed out. Try again."));
+          }, 8000);
+          socket.emit(
+            "authorize",
+            { personId, secret, asInstructor },
+            (response?: { ok: boolean; message?: string }) => {
+              window.clearTimeout(timer);
+              if (!response?.ok) {
+                reject(new Error(response?.message || "Verification failed."));
+                return;
+              }
+              resolve();
+            },
+          );
         }),
       place: (personId, target) => {
         socketRef.current?.emit("place", { personId, target });

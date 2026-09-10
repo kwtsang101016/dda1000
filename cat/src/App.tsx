@@ -115,7 +115,8 @@ export default function App() {
         return;
       }
       setAuthError(null);
-      setPending(action);
+      // Defer so the opening tap does not immediately dismiss the modal on phones.
+      window.setTimeout(() => setPending(action), 0);
       return;
     }
 
@@ -125,7 +126,7 @@ export default function App() {
     }
 
     setAuthError(null);
-    setPending(action);
+    window.setTimeout(() => setPending(action), 0);
   };
 
   const selectPerson = (personId: string) => {
