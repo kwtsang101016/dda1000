@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import type { DisplayPerson } from "../lib/people.ts";
 import { NameCard } from "./NameCard.tsx";
@@ -25,12 +25,10 @@ export function Seat({
   onDoubleUnseat,
 }: SeatProps) {
   const [holding, setHolding] = useState(false);
-  const [previewPos, setPreviewPos] = useState<{ left: number; top: number; place: "above" | "below" } | null>(
-    null,
-  );
-  const seatRef = useRef<HTMLButtonElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
   const timerRef = useRef<number | null>(null);
   const heldRef = useRef(false);
+  const pointerIdRef = useRef<number | null>(null);
 
   const clearHoldTimer = () => {
     if (timerRef.current !== null) {
@@ -39,45 +37,29 @@ export function Seat({
     }
   };
 
-  const updatePreviewPosition = () => {
-    const seat = seatRef.current;
-    if (!seat) {
-      return;
-    }
-    const rect = seat.getBoundingClientRect();
-    const previewHeight = 180;
-    const gap = 10;
-    const placeAbove = rect.top >= previewHeight + gap + 8;
-    setPreviewPos({
-      left: rect.left + rect.width / 2,
-      top: placeAbove ? rect.top - gap : rect.bottom + gap,
-      place: placeAbove ? "above" : "below",
-    });
-  };
-
   useEffect(() => () => clearHoldTimer(), []);
 
-  useLayoutEffect(() => {
-    if (!holding) {
-      setPreviewPos(null);
-      return;
+  const releasePointer = () => {
+    const button = buttonRef.current;
+    const pointerId = pointerIdRef.current;
+    if (button && pointerId !== null && button.hasPointerCapture(pointerId)) {
+      button.releasePointerCapture(pointerId);
     }
-    updatePreviewPosition();
-    const onViewportChange = () => updatePreviewPosition();
-    window.addEventListener("resize", onViewportChange);
-    window.addEventListener("scroll", onViewportChange, true);
-    return () => {
-      window.removeEventListener("resize", onViewportChange);
-      window.removeEventListener("scroll", onViewportChange, true);
-    };
-  }, [holding]);
+    pointerIdRef.current = null;
+  };
 
-  const startHold = () => {
-    if (!occupant) {
+  const startHold = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!occupant || event.button !== 0) {
       return;
     }
     heldRef.current = false;
     clearHoldTimer();
+    pointerIdRef.current = event.pointerId;
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Some browsers reject capture on certain pointer types; hold still works via up/cancel.
+    }
     timerRef.current = window.setTimeout(() => {
       heldRef.current = true;
       setHolding(true);
@@ -87,12 +69,13 @@ export function Seat({
   const endHold = () => {
     clearHoldTimer();
     setHolding(false);
+    releasePointer();
   };
 
   return (
     <button
       type="button"
-      ref={seatRef}
+      ref={buttonRef}
       className={[
         "seat",
         occupant ? "seat--filled" : "seat--empty",
@@ -119,7 +102,6 @@ export function Seat({
       onPointerDown={startHold}
       onPointerUp={endHold}
       onPointerCancel={endHold}
-      onPointerLeave={endHold}
       aria-label={occupant ? `${occupant.name} seat` : "Empty seat"}
     >
       {occupant ? (
@@ -127,14 +109,12 @@ export function Seat({
       ) : (
         <span className="seat__placeholder">sit here</span>
       )}
-      {holding && occupant && previewPos
+      {holding && occupant
         ? createPortal(
-            <div
-              className={`seat-preview seat-preview--${previewPos.place}`}
-              role="presentation"
-              style={{ left: previewPos.left, top: previewPos.top }}
-            >
-              <NameCard person={occupant} enlarged />
+            <div className="seat-preview-overlay" role="presentation" aria-hidden="true">
+              <div className="seat-preview-card">
+                <NameCard person={occupant} enlarged />
+              </div>
             </div>,
             document.body,
           )

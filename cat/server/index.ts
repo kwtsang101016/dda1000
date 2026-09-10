@@ -1,17 +1,16 @@
 import cors from "cors";
 import express from "express";
 import { existsSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Server, type Socket } from "socket.io";
 import { loadCredentialHashes, secretsMatch } from "./credentials.ts";
+import { durableStoreEnabled, loadClassroomState, persistClassroomState } from "./stateStore.ts";
 import {
   DEFAULT_STATE,
-  isClassroomState,
   isSeatRef,
-  normalizeLoadedState,
   normalizeProfile,
   placePerson,
   resetSeating,
@@ -23,8 +22,7 @@ import type { ClassroomState, Roster, ServerSnapshot } from "../shared/types.ts"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
-const stateDir = path.join(rootDir, "data");
-const statePath = path.join(stateDir, "state.json");
+const statePath = path.join(rootDir, "data", "state.json");
 const rosterPath = path.join(rootDir, "src", "data", "roster.json");
 const credentialsPath = path.join(rootDir, "server", "data", "credentials.json");
 const distDir = path.join(rootDir, "dist");
@@ -94,27 +92,12 @@ async function loadCredentials(): Promise<Record<string, string | null>> {
 }
 
 async function loadState(): Promise<ClassroomState> {
-  try {
-    const raw = await readFile(statePath, "utf8");
-    const parsed: unknown = JSON.parse(raw);
-    if (!isClassroomState(parsed)) {
-      console.warn("Stored classroom state was invalid; using defaults.");
-      return DEFAULT_STATE;
-    }
-    return normalizeLoadedState(parsed);
-  } catch (error) {
-    const code = (error as NodeJS.ErrnoException).code;
-    if (code !== "ENOENT") {
-      console.warn("Could not read classroom state file:", error);
-    }
-    return DEFAULT_STATE;
-  }
+  return loadClassroomState(statePath);
 }
 
 async function persistState(next: ClassroomState): Promise<void> {
   try {
-    await mkdir(stateDir, { recursive: true });
-    await writeFile(statePath, `${JSON.stringify(next, null, 2)}\n`, "utf8");
+    await persistClassroomState(statePath, next);
   } catch (error) {
     console.error("Failed to persist classroom state:", error);
   }
@@ -137,6 +120,12 @@ async function main(): Promise<void> {
     console.log("Updated classroom layout default to 4 student rows × 10 seats.");
   }
 
+  if (!durableStoreEnabled()) {
+    console.warn(
+      "No Upstash Redis configured. On Render, seating/profile data will be erased whenever the service redeploys.",
+    );
+  }
+
   if (INSTRUCTOR_PIN === DEFAULT_PIN) {
     console.warn(
       `INSTRUCTOR_PIN is still the default ("${DEFAULT_PIN}"). Set INSTRUCTOR_PIN on Render before class.`,
@@ -149,7 +138,12 @@ async function main(): Promise<void> {
   app.use(express.json({ limit: "250kb" }));
 
   app.get("/health", (_req, res) => {
-    res.json({ ok: true, course: roster.course, section: roster.section });
+    res.json({
+      ok: true,
+      course: roster.course,
+      section: roster.section,
+      durableStore: durableStoreEnabled(),
+    });
   });
 
   const hasDist = existsSync(distDir);
