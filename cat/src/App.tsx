@@ -1,8 +1,10 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import rosterData from "./data/roster.json" with { type: "json" };
+import { AuthModal } from "./components/AuthModal.tsx";
 import { NameCardTray } from "./components/NameCardTray.tsx";
 import { ProfileEditor } from "./components/ProfileEditor.tsx";
 import { Seat } from "./components/Seat.tsx";
+import { rememberInstructorSecret, rememberPersonSecret } from "./lib/authSession.ts";
 import { mergePerson } from "./lib/people.ts";
 import { useClassroomSync } from "./lib/useClassroomSync.ts";
 import {
@@ -17,6 +19,13 @@ import type { Person, PersonProfile, Roster, SeatRef } from "../shared/types.ts"
 
 const roster = rosterData as Roster;
 
+type PendingAction =
+  | { type: "place"; personId: string; target: SeatRef }
+  | { type: "unseat"; personId: string }
+  | { type: "edit"; personId: string }
+  | { type: "reset" }
+  | { type: "setLayout"; studentRowCount: number; seatsPerRow: number };
+
 function matchesQuery(person: Person, query: string): boolean {
   const needle = query.trim().toLowerCase();
   if (!needle) {
@@ -25,7 +34,6 @@ function matchesQuery(person: Person, query: string): boolean {
   return (
     person.name.toLowerCase().includes(needle) ||
     person.englishName.toLowerCase().includes(needle) ||
-    person.studentId.toLowerCase().includes(needle) ||
     person.college.toLowerCase().includes(needle)
   );
 }
@@ -34,11 +42,19 @@ function byChineseName(a: Person, b: Person): number {
   return a.name.localeCompare(b.name, "zh-CN");
 }
 
+function requiresInstructorOnly(personId: string): boolean {
+  const person = roster.people.find((entry) => entry.id === personId);
+  return person?.role === "aa";
+}
+
 export default function App() {
   const sync = useClassroomSync();
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [pending, setPending] = useState<PendingAction | null>(null);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const lastTapRef = useRef<{ id: string; at: number } | null>(null);
 
   const peopleById = useMemo(() => {
@@ -67,16 +83,53 @@ export default function App() {
   const selectedPerson = selectedId ? peopleById[selectedId] : undefined;
   const editingPerson = editingId ? peopleById[editingId] : undefined;
 
-  const selectPerson = (personId: string) => {
-    setSelectedId((current) => (current === personId ? null : personId));
+  const runAction = (action: PendingAction) => {
+    switch (action.type) {
+      case "place":
+        sync.place(action.personId, action.target);
+        setSelectedId(null);
+        break;
+      case "unseat":
+        sync.unseat(action.personId);
+        if (selectedId === action.personId) {
+          setSelectedId(null);
+        }
+        break;
+      case "edit":
+        setEditingId(action.personId);
+        break;
+      case "reset":
+        sync.reset();
+        setSelectedId(null);
+        break;
+      case "setLayout":
+        sync.setLayout(action.studentRowCount, action.seatsPerRow);
+        break;
+    }
   };
 
-  const placeSelected = (target: SeatRef) => {
-    if (!selectedId) {
+  const ensureAndRun = (action: PendingAction) => {
+    if (action.type === "reset" || action.type === "setLayout") {
+      if (sync.isInstructor) {
+        runAction(action);
+        return;
+      }
+      setAuthError(null);
+      setPending(action);
       return;
     }
-    sync.place(selectedId, target);
-    setSelectedId(null);
+
+    if (sync.canControl(action.personId)) {
+      runAction(action);
+      return;
+    }
+
+    setAuthError(null);
+    setPending(action);
+  };
+
+  const selectPerson = (personId: string) => {
+    setSelectedId((current) => (current === personId ? null : personId));
   };
 
   const handleSeatTap = (target: SeatRef, occupantId?: string) => {
@@ -85,10 +138,7 @@ export default function App() {
       const last = lastTapRef.current;
       if (last && last.id === occupantId && now - last.at < 380) {
         lastTapRef.current = null;
-        sync.unseat(occupantId);
-        if (selectedId === occupantId) {
-          setSelectedId(null);
-        }
+        ensureAndRun({ type: "unseat", personId: occupantId });
         return;
       }
       lastTapRef.current = { id: occupantId, at: now };
@@ -101,7 +151,7 @@ export default function App() {
         setSelectedId(null);
         return;
       }
-      placeSelected(target);
+      ensureAndRun({ type: "place", personId: selectedId, target });
       return;
     }
 
@@ -113,8 +163,7 @@ export default function App() {
   const handleReset = () => {
     const confirmed = window.confirm("Return every name card to the side tray?");
     if (confirmed) {
-      sync.reset();
-      setSelectedId(null);
+      ensureAndRun({ type: "reset" });
     }
   };
 
@@ -125,6 +174,15 @@ export default function App() {
     sync.updateProfile(editingId, profile);
     setEditingId(null);
   };
+
+  const pendingPersonId =
+    pending && pending.type !== "reset" && pending.type !== "setLayout" ? pending.personId : null;
+  const pendingPersonName =
+    pending?.type === "reset" || pending?.type === "setLayout"
+      ? "Instructor controls"
+      : pendingPersonId
+        ? peopleById[pendingPersonId]?.name || "Name card"
+        : "";
 
   const seatCount = sync.state.seatsPerRow;
 
@@ -144,6 +202,7 @@ export default function App() {
           <StatusPill status={sync.status} connectedCount={sync.connectedCount} />
           <p className="seated-count">
             {seatedCount} / {roster.people.length} seated
+            {sync.isInstructor ? " · instructor" : ""}
           </p>
         </div>
       </header>
@@ -159,19 +218,21 @@ export default function App() {
           <p>
             Selected: <strong>{selectedPerson.name}</strong> — tap an empty seat to sit
             {seatedIds.has(selectedPerson.id) ? ", or another empty seat to move" : ""}.
+            You will be asked for your student ID.
           </p>
           <div className="selection-bar__actions">
-            <button type="button" className="ghost-button" onClick={() => setEditingId(selectedPerson.id)}>
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={() => ensureAndRun({ type: "edit", personId: selectedPerson.id })}
+            >
               Edit card
             </button>
             {seatedIds.has(selectedPerson.id) ? (
               <button
                 type="button"
                 className="ghost-button"
-                onClick={() => {
-                  sync.unseat(selectedPerson.id);
-                  setSelectedId(null);
-                }}
+                onClick={() => ensureAndRun({ type: "unseat", personId: selectedPerson.id })}
               >
                 Stand up
               </button>
@@ -183,8 +244,8 @@ export default function App() {
         </div>
       ) : (
         <p className="howto">
-          Phone-friendly: tap a name card, then tap a seat. Double-tap a seated name to cancel.
-          Press and hold a seat to see the full card. Seats show the name only.
+          Tap a name card, then a seat. Student ID is required to sit, move, stand up, or edit —
+          IDs are not shown on the page. Press and hold a seat for details. Double-tap to stand up.
         </p>
       )}
 
@@ -197,7 +258,11 @@ export default function App() {
             max={MAX_STUDENT_ROWS}
             value={sync.state.studentRowCount}
             onChange={(event) =>
-              sync.setLayout(Number(event.target.value), sync.state.seatsPerRow)
+              ensureAndRun({
+                type: "setLayout",
+                studentRowCount: Number(event.target.value),
+                seatsPerRow: sync.state.seatsPerRow,
+              })
             }
           />
         </label>
@@ -209,7 +274,11 @@ export default function App() {
             max={MAX_SEATS_PER_ROW}
             value={sync.state.seatsPerRow}
             onChange={(event) =>
-              sync.setLayout(sync.state.studentRowCount, Number(event.target.value))
+              ensureAndRun({
+                type: "setLayout",
+                studentRowCount: sync.state.studentRowCount,
+                seatsPerRow: Number(event.target.value),
+              })
             }
           />
         </label>
@@ -242,10 +311,7 @@ export default function App() {
                     if (!occupantId) {
                       return;
                     }
-                    sync.unseat(occupantId);
-                    if (selectedId === occupantId) {
-                      setSelectedId(null);
-                    }
+                    ensureAndRun({ type: "unseat", personId: occupantId });
                   }}
                 />
               );
@@ -278,10 +344,7 @@ export default function App() {
                       if (!occupantId) {
                         return;
                       }
-                      sync.unseat(occupantId);
-                      if (selectedId === occupantId) {
-                        setSelectedId(null);
-                      }
+                      ensureAndRun({ type: "unseat", personId: occupantId });
                     }}
                   />
                 );
@@ -298,7 +361,7 @@ export default function App() {
           selectedId={selectedId}
           onQueryChange={setQuery}
           onSelect={selectPerson}
-          onEdit={setEditingId}
+          onEdit={(personId) => ensureAndRun({ type: "edit", personId })}
         />
       </div>
 
@@ -307,6 +370,48 @@ export default function App() {
           person={editingPerson}
           onClose={() => setEditingId(null)}
           onSave={handleSaveProfile}
+        />
+      ) : null}
+
+      {pending ? (
+        <AuthModal
+          personName={pendingPersonName}
+          requiresInstructorOnly={
+            pending.type === "reset" ||
+            pending.type === "setLayout" ||
+            (pendingPersonId ? requiresInstructorOnly(pendingPersonId) : false)
+          }
+          busy={authBusy}
+          error={authError}
+          onCancel={() => {
+            setPending(null);
+            setAuthError(null);
+          }}
+          onSubmit={(secret, asInstructor) => {
+            void (async () => {
+              setAuthBusy(true);
+              setAuthError(null);
+              try {
+                await sync.authorize({
+                  personId: pendingPersonId ?? undefined,
+                  secret,
+                  asInstructor,
+                });
+                if (asInstructor) {
+                  rememberInstructorSecret(secret);
+                } else if (pendingPersonId) {
+                  rememberPersonSecret(pendingPersonId, secret);
+                }
+                const action = pending;
+                setPending(null);
+                runAction(action);
+              } catch (error) {
+                setAuthError(error instanceof Error ? error.message : "Verification failed.");
+              } finally {
+                setAuthBusy(false);
+              }
+            })();
+          }}
         />
       ) : null}
     </div>

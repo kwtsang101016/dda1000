@@ -58,7 +58,6 @@ export function NameCard({
         <span className="name-card__role">{roleLabel}</span>
         <h3 className="name-card__name">{person.name}</h3>
         {person.englishName ? <p className="name-card__english">{person.englishName}</p> : null}
-        {person.studentId ? <p className="name-card__meta">{person.studentId}</p> : null}
         {person.displayCollege ? <p className="name-card__meta">{person.displayCollege}</p> : null}
         {person.displayCountry ? <p className="name-card__meta">{person.displayCountry}</p> : null}
         {person.displayHobbies ? <p className="name-card__meta">{person.displayHobbies}</p> : null}

@@ -594,6 +594,20 @@ h1 {
   gap: 8px;
 }
 
+.modal__help {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.check-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--ink);
+}
+
 .modal__error {
   color: #6d2c1b;
   font-size: 13px;

@@ -5,7 +5,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Server } from "socket.io";
+import { Server, type Socket } from "socket.io";
+import { loadCredentialHashes, secretsMatch } from "./credentials.ts";
 import {
   DEFAULT_STATE,
   isClassroomState,
@@ -25,11 +26,53 @@ const rootDir = path.resolve(__dirname, "..");
 const stateDir = path.join(rootDir, "data");
 const statePath = path.join(stateDir, "state.json");
 const rosterPath = path.join(rootDir, "src", "data", "roster.json");
+const credentialsPath = path.join(rootDir, "server", "data", "credentials.json");
 const distDir = path.join(rootDir, "dist");
 const PORT = Number(process.env.PORT) || 3001;
+const DEFAULT_PIN = "change-me-dda1000";
+const INSTRUCTOR_PIN = process.env.INSTRUCTOR_PIN || DEFAULT_PIN;
+
+interface SocketAuth {
+  isInstructor: boolean;
+  authorizedIds: Set<string>;
+}
 
 let state: ClassroomState = DEFAULT_STATE;
 let personIds = new Set<string>();
+let credentialHashes: Record<string, string | null> = {};
+
+function getAuth(socket: Socket): SocketAuth {
+  const data = socket.data as { auth?: SocketAuth };
+  if (!data.auth) {
+    data.auth = { isInstructor: false, authorizedIds: new Set() };
+  }
+  return data.auth;
+}
+
+function emitAuthState(socket: Socket): void {
+  const auth = getAuth(socket);
+  socket.emit("auth-state", {
+    isInstructor: auth.isInstructor,
+    authorizedIds: [...auth.authorizedIds],
+  });
+}
+
+function canControl(socket: Socket, personId: string): boolean {
+  const auth = getAuth(socket);
+  return auth.isInstructor || auth.authorizedIds.has(personId);
+}
+
+function requireControl(socket: Socket, personId: string): void {
+  if (!canControl(socket, personId)) {
+    throw new Error("Enter this person's student ID (or the instructor PIN) to continue.");
+  }
+}
+
+function requireInstructor(socket: Socket): void {
+  if (!getAuth(socket).isInstructor) {
+    throw new Error("Only the instructor can change the table layout or reset seats.");
+  }
+}
 
 async function loadRoster(): Promise<Roster> {
   try {
@@ -44,6 +87,10 @@ async function loadRoster(): Promise<Roster> {
       `Failed to load class roster from ${rosterPath}: ${error instanceof Error ? error.message : "unknown error"}`,
     );
   }
+}
+
+async function loadCredentials(): Promise<Record<string, string | null>> {
+  return loadCredentialHashes(credentialsPath);
 }
 
 async function loadState(): Promise<ClassroomState> {
@@ -79,8 +126,15 @@ function snapshot(connectedCount: number): ServerSnapshot {
 
 async function main(): Promise<void> {
   const roster = await loadRoster();
+  credentialHashes = await loadCredentials();
   personIds = new Set(roster.people.map((person) => person.id));
   state = await loadState();
+
+  if (INSTRUCTOR_PIN === DEFAULT_PIN) {
+    console.warn(
+      `INSTRUCTOR_PIN is still the default ("${DEFAULT_PIN}"). Set INSTRUCTOR_PIN on Render before class.`,
+    );
+  }
 
   const app = express();
   app.disable("x-powered-by");
@@ -124,8 +178,58 @@ async function main(): Promise<void> {
   };
 
   io.on("connection", (socket) => {
+    getAuth(socket);
+    emitAuthState(socket);
     socket.emit("snapshot", snapshot(io.engine.clientsCount));
     socket.broadcast.emit("presence", { connectedCount: io.engine.clientsCount });
+
+    socket.on("authorize", (payload: unknown, ack?: (response: { ok: boolean; message?: string }) => void) => {
+      try {
+        if (typeof payload !== "object" || payload === null) {
+          throw new Error("Invalid authorization payload.");
+        }
+        const { personId, secret, asInstructor } = payload as {
+          personId?: unknown;
+          secret?: unknown;
+          asInstructor?: unknown;
+        };
+        if (typeof secret !== "string" || !secret.trim()) {
+          throw new Error("Enter a student ID or instructor PIN.");
+        }
+
+        const auth = getAuth(socket);
+
+        if (asInstructor) {
+          if (secret !== INSTRUCTOR_PIN) {
+            throw new Error("Instructor PIN is incorrect.");
+          }
+          auth.isInstructor = true;
+          emitAuthState(socket);
+          ack?.({ ok: true });
+          return;
+        }
+
+        if (typeof personId !== "string" || !personIds.has(personId)) {
+          throw new Error("Unknown name card.");
+        }
+
+        const expected = credentialHashes[personId];
+        if (!expected) {
+          throw new Error("This card can only be managed with the instructor PIN.");
+        }
+        if (!secretsMatch(secret, expected)) {
+          throw new Error("Student ID does not match.");
+        }
+
+        auth.authorizedIds.add(personId);
+        emitAuthState(socket);
+        ack?.({ ok: true });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Authorization failed.";
+        ack?.({ ok: false, message });
+        socket.emit("error-message", message);
+      }
+    });
 
     socket.on("place", async (payload: unknown) => {
       try {
@@ -139,6 +243,7 @@ async function main(): Promise<void> {
         if (!isSeatRef(target)) {
           throw new Error("Invalid seat.");
         }
+        requireControl(socket, personId);
         state = placePerson(state, personId, target);
         await persistState(state);
         emitState();
@@ -157,6 +262,7 @@ async function main(): Promise<void> {
         if (typeof personId !== "string" || !personIds.has(personId)) {
           throw new Error("Unknown name card.");
         }
+        requireControl(socket, personId);
         state = unseatPerson(state, personId);
         await persistState(state);
         emitState();
@@ -168,6 +274,7 @@ async function main(): Promise<void> {
 
     socket.on("setLayout", async (payload: unknown) => {
       try {
+        requireInstructor(socket);
         if (typeof payload !== "object" || payload === null) {
           throw new Error("Invalid layout payload.");
         }
@@ -196,6 +303,7 @@ async function main(): Promise<void> {
         if (typeof personId !== "string" || !personIds.has(personId)) {
           throw new Error("Unknown name card.");
         }
+        requireControl(socket, personId);
         const normalized = normalizeProfile(profile);
         state = updateProfile(state, personId, normalized);
         await persistState(state);
@@ -208,6 +316,7 @@ async function main(): Promise<void> {
 
     socket.on("reset", async () => {
       try {
+        requireInstructor(socket);
         state = resetSeating(state);
         await persistState(state);
         emitState();

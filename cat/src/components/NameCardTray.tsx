@@ -31,15 +31,15 @@ export function NameCardTray({
         <p>{total} waiting</p>
       </div>
       <p className="tray__hint">
-        Tap a card, then tap a seat. Double-tap a seated card to stand up. Press and hold a seat to
-        see photo and details.
+        Tap a card, then a seat. You will enter your student ID (not shown on cards). Double-tap to
+        stand up. Press and hold a seat for photo and details.
       </p>
       <label className="tray__search">
         <span>Find your name</span>
         <input
           type="search"
           value={query}
-          placeholder="Name or student ID"
+          placeholder="Name"
           onChange={(event) => onQueryChange(event.target.value)}
           autoComplete="off"
         />

@@ -2,19 +2,34 @@
 
 Realtime seating board for lecture **L12** (academic advisor 曾家炜 / Ka Wai Tsang). Students find their name card on the side, tap it, then tap a seat. Everyone looking at the page sees the table update immediately.
 
-Phone-friendly controls:
+## How students use it
 
 1. Tap a name card, then tap a seat to sit
-2. Tap a seated card, then another empty seat to move
-3. Double-tap a seated card to stand up
-4. Press and hold a seat to enlarge the name
-5. Use **Edit** on a card to add college, country, hobbies, or a photo
+2. Enter **your student ID** when asked (IDs are never shown on the page)
+3. Tap a seated card, then another empty seat to move
+4. Double-tap a seated card to stand up
+5. Press and hold a seat to see photo / college / country / hobbies
+6. Use **Edit** to update your card (also requires your student ID)
 
-Layout:
+Student IDs are checked only on the server as one-way hashes. The public website and GitHub repo do not contain raw IDs.
+
+## Instructor controls
+
+Set environment variable `INSTRUCTOR_PIN` (on Render: Environment → `INSTRUCTOR_PIN`).
+
+With that PIN you can:
+
+- Manage any card (including the AA card)
+- Change row / seat counts
+- Reset all seats
+
+Local default PIN if unset: `change-me-dda1000` — change it before class.
+
+## Layout
 
 1. Front row: academic advisor and peer advisors
 2. Second row: empty aisle
-3. Remaining rows: students (`Row 1`, `Row 2`, …). Row count and seats per row can be changed live.
+3. Remaining rows: students (`Row 1`, `Row 2`, …)
 
 ## Run locally
 
@@ -25,31 +40,33 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173). For a classroom LAN test:
+Or production mode:
 
 ```bash
 npm run build
 npm start
 ```
 
-Then visit `http://YOUR-LAN-IP:3001`.
+Open [http://localhost:3001](http://localhost:3001) after `npm start`.
+
+Optional:
+
+```bash
+set INSTRUCTOR_PIN=your-secret
+npm start
+```
 
 ## Deploy on Render
 
-GitHub Pages cannot host the live multi-user table. Use [Render](https://render.com):
+1. Repo: [kwtsang101016/dda1000](https://github.com/kwtsang101016/dda1000)
+2. Root Directory: `cat`
+3. Build: `npm install && npm run build` · Start: `npm start`
+4. Set `INSTRUCTOR_PIN` in the Render dashboard (do not commit the real PIN)
+5. Share the Render URL with the class
 
-1. Connect the repo [kwtsang101016/dda1000](https://github.com/kwtsang101016/dda1000) (the whole course repo, not a separate “/cat” repo).
-2. Create a **Web Service**.
-3. Set **Root Directory** to `cat` (the root `render.yaml` already sets `rootDir: cat`).
-4. Build: `npm install && npm run build` · Start: `npm start`.
-5. Share the Render URL (for example `https://dda1000-cat.onrender.com`) with the class.
+Wake the free-tier service a few minutes before class.
 
-Wake the service a few minutes before class if you are on Render’s free plan.
+## Roster files
 
-## Roster
-
-Name cards come from `src/data/roster.json`:
-
-- AA: 曾家炜 (Ka Wai Tsang)
-- PAs: 张雅婧 (leading), 吴蔡延, 梁心睿
-- 36 L12 students listed under 曾家炜 in the 2026 class list
+- `src/data/roster.json` — public names (no student IDs)
+- `server/data/credentials.json` — SHA-256 hashes used only on the server

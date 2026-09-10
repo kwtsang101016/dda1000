@@ -5,7 +5,6 @@
   "people": [
     {
       "id": "aa-tsang",
-      "studentId": "",
       "name": "曾家炜",
       "englishName": "Ka Wai Tsang",
       "role": "aa",
@@ -15,7 +14,6 @@
     },
     {
       "id": "pa-125090950",
-      "studentId": "125090950",
       "name": "张雅婧",
       "englishName": "",
       "role": "pa",
@@ -25,7 +23,6 @@
     },
     {
       "id": "pa-124090709",
-      "studentId": "124090709",
       "name": "吴蔡延",
       "englishName": "",
       "role": "pa",
@@ -35,7 +32,6 @@
     },
     {
       "id": "pa-125090379",
-      "studentId": "125090379",
       "name": "梁心睿",
       "englishName": "",
       "role": "pa",
@@ -45,7 +41,6 @@
     },
     {
       "id": "stu-126090398",
-      "studentId": "126090398",
       "name": "梁语心",
       "englishName": "",
       "role": "student",
@@ -54,7 +49,6 @@
     },
     {
       "id": "stu-126090418",
-      "studentId": "126090418",
       "name": "林乔莹",
       "englishName": "",
       "role": "student",
@@ -63,7 +57,6 @@
     },
     {
       "id": "stu-126090428",
-      "studentId": "126090428",
       "name": "林湛恩",
       "englishName": "",
       "role": "student",
@@ -72,7 +65,6 @@
     },
     {
       "id": "stu-126090445",
-      "studentId": "126090445",
       "name": "刘杰睿",
       "englishName": "",
       "role": "student",
@@ -81,7 +73,6 @@
     },
     {
       "id": "stu-126090446",
-      "studentId": "126090446",
       "name": "刘君昊",
       "englishName": "",
       "role": "student",
@@ -90,7 +81,6 @@
     },
     {
       "id": "stu-126090469",
-      "studentId": "126090469",
       "name": "刘一凡",
       "englishName": "",
       "role": "student",
@@ -99,7 +89,6 @@
     },
     {
       "id": "stu-126090654",
-      "studentId": "126090654",
       "name": "孙贲",
       "englishName": "",
       "role": "student",
@@ -108,7 +97,6 @@
     },
     {
       "id": "stu-126090524",
-      "studentId": "126090524",
       "name": "吕文恺",
       "englishName": "",
       "role": "student",
@@ -117,7 +105,6 @@
     },
     {
       "id": "stu-126090681",
-      "studentId": "126090681",
       "name": "唐婧",
       "englishName": "",
       "role": "student",
@@ -126,7 +113,6 @@
     },
     {
       "id": "stu-126090696",
-      "studentId": "126090696",
       "name": "田梓仟",
       "englishName": "",
       "role": "student",
@@ -135,7 +121,6 @@
     },
     {
       "id": "stu-126090763",
-      "studentId": "126090763",
       "name": "王子墨",
       "englishName": "",
       "role": "student",
@@ -144,7 +129,6 @@
     },
     {
       "id": "stu-126090825",
-      "studentId": "126090825",
       "name": "萧诺",
       "englishName": "",
       "role": "student",
@@ -153,7 +137,6 @@
     },
     {
       "id": "stu-126090795",
-      "studentId": "126090795",
       "name": "吴洛宇",
       "englishName": "",
       "role": "student",
@@ -162,7 +145,6 @@
     },
     {
       "id": "stu-126090341",
-      "studentId": "126090341",
       "name": "李佶喆",
       "englishName": "",
       "role": "student",
@@ -171,7 +153,6 @@
     },
     {
       "id": "stu-126090403",
-      "studentId": "126090403",
       "name": "廖欣驰",
       "englishName": "",
       "role": "student",
@@ -180,7 +161,6 @@
     },
     {
       "id": "stu-126090537",
-      "studentId": "126090537",
       "name": "马钰森",
       "englishName": "",
       "role": "student",
@@ -189,7 +169,6 @@
     },
     {
       "id": "stu-126090552",
-      "studentId": "126090552",
       "name": "倪溯飞",
       "englishName": "",
       "role": "student",
@@ -198,7 +177,6 @@
     },
     {
       "id": "stu-126090557",
-      "studentId": "126090557",
       "name": "牛英儒",
       "englishName": "",
       "role": "student",
@@ -207,7 +185,6 @@
     },
     {
       "id": "stu-126090560",
-      "studentId": "126090560",
       "name": "欧阳志颖",
       "englishName": "",
       "role": "student",
@@ -216,7 +193,6 @@
     },
     {
       "id": "stu-126090562",
-      "studentId": "126090562",
       "name": "潘卫东",
       "englishName": "",
       "role": "student",
@@ -225,7 +201,6 @@
     },
     {
       "id": "stu-126090563",
-      "studentId": "126090563",
       "name": "潘锡楷",
       "englishName": "",
       "role": "student",
@@ -234,7 +209,6 @@
     },
     {
       "id": "stu-126090605",
-      "studentId": "126090605",
       "name": "荣统宝",
       "englishName": "",
       "role": "student",
@@ -243,7 +217,6 @@
     },
     {
       "id": "stu-126090609",
-      "studentId": "126090609",
       "name": "商熵",
       "englishName": "",
       "role": "student",
@@ -252,7 +225,6 @@
     },
     {
       "id": "stu-126090659",
-      "studentId": "126090659",
       "name": "孙苗馨",
       "englishName": "",
       "role": "student",
@@ -261,7 +233,6 @@
     },
     {
       "id": "stu-126090153",
-      "studentId": "126090153",
       "name": "高和兴",
       "englishName": "",
       "role": "student",
@@ -270,7 +241,6 @@
     },
     {
       "id": "stu-126090426",
-      "studentId": "126090426",
       "name": "林钰",
       "englishName": "",
       "role": "student",
@@ -279,7 +249,6 @@
     },
     {
       "id": "stu-126090457",
-      "studentId": "126090457",
       "name": "刘硕",
       "englishName": "",
       "role": "student",
@@ -288,7 +257,6 @@
     },
     {
       "id": "stu-126090529",
-      "studentId": "126090529",
       "name": "马睿言",
       "englishName": "",
       "role": "student",
@@ -297,7 +265,6 @@
     },
     {
       "id": "stu-126090570",
-      "studentId": "126090570",
       "name": "彭俊豪",
       "englishName": "",
       "role": "student",
@@ -306,7 +273,6 @@
     },
     {
       "id": "stu-126090619",
-      "studentId": "126090619",
       "name": "沈也",
       "englishName": "",
       "role": "student",
@@ -315,7 +281,6 @@
     },
     {
       "id": "stu-126090758",
-      "studentId": "126090758",
       "name": "王子宸",
       "englishName": "",
       "role": "student",
@@ -324,7 +289,6 @@
     },
     {
       "id": "stu-126090827",
-      "studentId": "126090827",
       "name": "肖逸航",
       "englishName": "",
       "role": "student",
@@ -333,7 +297,6 @@
     },
     {
       "id": "stu-126090879",
-      "studentId": "126090879",
       "name": "杨彬睿",
       "englishName": "",
       "role": "student",
@@ -342,7 +305,6 @@
     },
     {
       "id": "stu-126090919",
-      "studentId": "126090919",
       "name": "叶一诺",
       "englishName": "",
       "role": "student",
@@ -351,7 +313,6 @@
     },
     {
       "id": "stu-126091014",
-      "studentId": "126091014",
       "name": "张馨文",
       "englishName": "",
       "role": "student",
@@ -360,7 +321,6 @@
     },
     {
       "id": "stu-126091071",
-      "studentId": "126091071",
       "name": "郑子墨",
       "englishName": "",
       "role": "student",

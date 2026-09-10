@@ -24,7 +24,8 @@ export interface ClassroomState {
 
 export interface Person {
   id: string;
-  studentId: string;
+  /** Never shipped to the browser; verification uses hashed IDs on the server. */
+  studentId?: string;
   name: string;
   englishName: string;
   role: Role;
