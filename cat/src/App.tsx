@@ -5,6 +5,7 @@ import { NameCardTray } from "./components/NameCardTray.tsx";
 import { ProfileEditor } from "./components/ProfileEditor.tsx";
 import { Seat } from "./components/Seat.tsx";
 import { rememberInstructorSecret, rememberPersonSecret } from "./lib/authSession.ts";
+import { downloadAttendanceCsv } from "./lib/attendanceExport.ts";
 import { mergePerson } from "./lib/people.ts";
 import { useClassroomSync } from "./lib/useClassroomSync.ts";
 import {
@@ -24,7 +25,12 @@ type PendingAction =
   | { type: "unseat"; personId: string }
   | { type: "edit"; personId: string }
   | { type: "reset" }
+  | { type: "saveAttendance" }
   | { type: "setLayout"; studentRowCount: number; seatsPerRow: number };
+
+function isInstructorAction(action: PendingAction): boolean {
+  return action.type === "reset" || action.type === "setLayout" || action.type === "saveAttendance";
+}
 
 function matchesQuery(person: Person, query: string): boolean {
   const needle = query.trim().toLowerCase();
@@ -102,6 +108,9 @@ export default function App() {
         sync.reset();
         setSelectedId(null);
         break;
+      case "saveAttendance":
+        downloadAttendanceCsv(roster, sync.state);
+        break;
       case "setLayout":
         sync.setLayout(action.studentRowCount, action.seatsPerRow);
         break;
@@ -109,7 +118,7 @@ export default function App() {
   };
 
   const ensureAndRun = (action: PendingAction) => {
-    if (action.type === "reset" || action.type === "setLayout") {
+    if (isInstructorAction(action)) {
       if (sync.isInstructor) {
         runAction(action);
         return;
@@ -168,6 +177,10 @@ export default function App() {
     }
   };
 
+  const handleSaveAttendance = () => {
+    ensureAndRun({ type: "saveAttendance" });
+  };
+
   const handleSaveProfile = (profile: PersonProfile) => {
     if (!editingId) {
       return;
@@ -176,14 +189,12 @@ export default function App() {
     setEditingId(null);
   };
 
-  const pendingPersonId =
-    pending && pending.type !== "reset" && pending.type !== "setLayout" ? pending.personId : null;
-  const pendingPersonName =
-    pending?.type === "reset" || pending?.type === "setLayout"
-      ? "Instructor controls"
-      : pendingPersonId
-        ? peopleById[pendingPersonId]?.name || "Name card"
-        : "";
+  const pendingPersonId = pending && !isInstructorAction(pending) ? pending.personId : null;
+  const pendingPersonName = pending && isInstructorAction(pending)
+    ? "Instructor controls"
+    : pendingPersonId
+      ? peopleById[pendingPersonId]?.name || "Name card"
+      : "";
 
   const seatCount = sync.state.seatsPerRow;
 
@@ -291,6 +302,9 @@ export default function App() {
         <button type="button" className="ghost-button" onClick={handleReset}>
           Reset seats
         </button>
+        <button type="button" className="ghost-button" onClick={handleSaveAttendance}>
+          Save attendance
+        </button>
       </section>
 
       <div className="workspace">
@@ -383,8 +397,7 @@ export default function App() {
         <AuthModal
           personName={pendingPersonName}
           requiresInstructorOnly={
-            pending.type === "reset" ||
-            pending.type === "setLayout" ||
+            isInstructorAction(pending) ||
             (pendingPersonId ? requiresInstructorOnly(pendingPersonId) : false)
           }
           busy={authBusy}

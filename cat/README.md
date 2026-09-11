@@ -22,6 +22,7 @@ With that PIN you can:
 - Manage any card (including the AA card)
 - Change row / seat counts
 - Reset all seats
+- **Save attendance** — downloads a CSV snapshot of who is present/absent and which row/seat (useful from your phone; files usually land in Downloads / Files)
 
 Local default PIN if unset: `change-me-dda1000` — change it before class.
 
