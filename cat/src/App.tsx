@@ -28,7 +28,9 @@ type PendingAction =
   | { type: "saveAttendance" }
   | { type: "setLayout"; studentRowCount: number; seatsPerRow: number };
 
-function isInstructorAction(action: PendingAction): boolean {
+function isInstructorAction(
+  action: PendingAction,
+): action is Extract<PendingAction, { type: "reset" | "saveAttendance" | "setLayout" }> {
   return action.type === "reset" || action.type === "setLayout" || action.type === "saveAttendance";
 }
 
@@ -189,12 +191,13 @@ export default function App() {
     setEditingId(null);
   };
 
-  const pendingPersonId = pending && !isInstructorAction(pending) ? pending.personId : null;
-  const pendingPersonName = pending && isInstructorAction(pending)
-    ? "Instructor controls"
-    : pendingPersonId
-      ? peopleById[pendingPersonId]?.name || "Name card"
-      : "";
+  const pendingPersonId = pending && "personId" in pending ? pending.personId : null;
+  const pendingPersonName =
+    pending && isInstructorAction(pending)
+      ? "Instructor controls"
+      : pendingPersonId
+        ? peopleById[pendingPersonId]?.name || "Name card"
+        : "";
 
   const seatCount = sync.state.seatsPerRow;
 
