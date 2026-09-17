@@ -6,17 +6,18 @@ import { ProfileEditor } from "./components/ProfileEditor.tsx";
 import { Seat } from "./components/Seat.tsx";
 import { rememberInstructorSecret, rememberPersonSecret } from "./lib/authSession.ts";
 import { downloadAttendanceCsv } from "./lib/attendanceExport.ts";
-import { mergePerson } from "./lib/people.ts";
+import { mergePerson, type DisplayPerson } from "./lib/people.ts";
 import { useClassroomSync } from "./lib/useClassroomSync.ts";
 import {
   MAX_SEATS_PER_ROW,
   MAX_STUDENT_ROWS,
   MIN_SEATS_PER_ROW,
   MIN_STUDENT_ROWS,
+  isGuestId,
   occupantAt,
   seatKey,
 } from "../shared/seating.ts";
-import type { Person, PersonProfile, Roster, SeatRef } from "../shared/types.ts";
+import type { PersonProfile, Roster, SeatRef } from "../shared/types.ts";
 
 const roster = rosterData as Roster;
 
@@ -34,25 +35,34 @@ function isInstructorAction(
   return action.type === "reset" || action.type === "setLayout" || action.type === "saveAttendance";
 }
 
-function matchesQuery(person: Person, query: string): boolean {
+function matchesQuery(person: DisplayPerson, query: string): boolean {
   const needle = query.trim().toLowerCase();
   if (!needle) {
     return true;
   }
-  return (
-    person.name.toLowerCase().includes(needle) ||
-    person.englishName.toLowerCase().includes(needle) ||
-    person.college.toLowerCase().includes(needle)
-  );
+  const haystack = [
+    person.name,
+    person.englishName,
+    person.displayCollege,
+    person.displayCountry,
+    person.displayHobbies,
+    person.college,
+    person.country ?? "",
+    person.hobbies ?? "",
+    person.plan,
+    person.role,
+  ]
+    .join(" ")
+    .toLowerCase();
+  return haystack.includes(needle);
 }
 
-function byChineseName(a: Person, b: Person): number {
+function byChineseName(a: { name: string }, b: { name: string }): number {
   return a.name.localeCompare(b.name, "zh-CN");
 }
 
-function requiresInstructorOnly(personId: string): boolean {
-  const person = roster.people.find((entry) => entry.id === personId);
-  return person?.role === "aa";
+function requiresInstructorOnly(personId: string, peopleById: Record<string, DisplayPerson>): boolean {
+  return peopleById[personId]?.role === "aa";
 }
 
 export default function App() {
@@ -66,28 +76,41 @@ export default function App() {
   const lastTapRef = useRef<{ id: string; at: number } | null>(null);
 
   const peopleById = useMemo(() => {
-    const map: Record<string, ReturnType<typeof mergePerson>> = {};
+    const map: Record<string, DisplayPerson> = {};
     for (const person of roster.people) {
       map[person.id] = mergePerson(person, sync.state.profiles[person.id]);
     }
+    for (const guest of sync.state.guests ?? []) {
+      map[guest.id] = mergePerson(guest, sync.state.profiles[guest.id]);
+    }
     return map;
-  }, [sync.state.profiles]);
+  }, [sync.state.guests, sync.state.profiles]);
 
   const seatedIds = useMemo(() => new Set(Object.keys(sync.state.placements)), [sync.state.placements]);
-  const seatedCount = roster.people.filter((person) => seatedIds.has(person.id)).length;
+  const rosterCount = roster.people.length + (sync.state.guests?.length ?? 0);
+  const seatedCount = Object.keys(sync.state.placements).length;
 
   const unseated = useMemo(
     () =>
-      roster.people
+      Object.values(peopleById)
         .filter((person) => !seatedIds.has(person.id) && matchesQuery(person, query))
-        .map((person) => peopleById[person.id])
         .sort(byChineseName),
     [peopleById, query, seatedIds],
   );
 
+  const seatedMatches = useMemo(() => {
+    if (!query.trim()) {
+      return [] as DisplayPerson[];
+    }
+    return Object.values(peopleById)
+      .filter((person) => seatedIds.has(person.id) && matchesQuery(person, query))
+      .sort(byChineseName);
+  }, [peopleById, query, seatedIds]);
+
   const advisors = unseated.filter((person) => person.role === "aa");
   const peerAdvisors = unseated.filter((person) => person.role === "pa");
   const students = unseated.filter((person) => person.role === "student");
+  const guestsWaiting = unseated.filter((person) => person.role === "guest");
   const selectedPerson = selectedId ? peopleById[selectedId] : undefined;
   const editingPerson = editingId ? peopleById[editingId] : undefined;
 
@@ -111,7 +134,10 @@ export default function App() {
         setSelectedId(null);
         break;
       case "saveAttendance":
-        downloadAttendanceCsv(roster, sync.state);
+        downloadAttendanceCsv(roster, sync.state, [
+          ...roster.people,
+          ...(sync.state.guests ?? []),
+        ]);
         break;
       case "setLayout":
         sync.setLayout(action.studentRowCount, action.seatsPerRow);
@@ -183,6 +209,26 @@ export default function App() {
     ensureAndRun({ type: "saveAttendance" });
   };
 
+  const handleAddGuest = (name: string, englishName: string) => {
+    sync.addGuest(name, englishName);
+  };
+
+  const handleRemoveGuest = (personId: string) => {
+    if (!isGuestId(personId)) {
+      return;
+    }
+    const confirmed = window.confirm("Remove this temporary name card?");
+    if (confirmed) {
+      sync.removeGuest(personId);
+      if (selectedId === personId) {
+        setSelectedId(null);
+      }
+      if (editingId === personId) {
+        setEditingId(null);
+      }
+    }
+  };
+
   const handleSaveProfile = (profile: PersonProfile) => {
     if (!editingId) {
       return;
@@ -213,6 +259,14 @@ export default function App() {
             <a className="title-link" href="/arrangement/">
               Arrangement
             </a>
+            <a
+              className="title-link"
+              href="https://kwtsang101016.github.io/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Homepage
+            </a>
           </div>
           <p className="subtitle">
             曾家炜 · Ka Wai Tsang · {roster.classroom}
@@ -221,7 +275,7 @@ export default function App() {
         <div className="topbar__meta">
           <StatusPill status={sync.status} connectedCount={sync.connectedCount} />
           <p className="seated-count">
-            {seatedCount} / {roster.people.length} seated
+            {seatedCount} / {rosterCount} seated
             {sync.isInstructor ? " · instructor" : ""}
           </p>
         </div>
@@ -380,11 +434,15 @@ export default function App() {
           advisors={advisors}
           peerAdvisors={peerAdvisors}
           students={students}
+          guestsWaiting={guestsWaiting}
+          seatedMatches={seatedMatches}
           query={query}
           selectedId={selectedId}
           onQueryChange={setQuery}
           onSelect={selectPerson}
           onEdit={(personId) => ensureAndRun({ type: "edit", personId })}
+          onAddGuest={handleAddGuest}
+          onRemoveGuest={handleRemoveGuest}
         />
       </div>
 
@@ -401,7 +459,7 @@ export default function App() {
           personName={pendingPersonName}
           requiresInstructorOnly={
             isInstructorAction(pending) ||
-            (pendingPersonId ? requiresInstructorOnly(pendingPersonId) : false)
+            (pendingPersonId ? requiresInstructorOnly(pendingPersonId, peopleById) : false)
           }
           busy={authBusy}
           error={authError}

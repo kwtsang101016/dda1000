@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   DEFAULT_STATE,
+  forDurableStore,
   isClassroomState,
   normalizeLoadedState,
 } from "../shared/seating.ts";
@@ -103,7 +104,7 @@ export async function loadClassroomState(statePath: string): Promise<ClassroomSt
   const fromFile = await loadFromFile(statePath);
   if (fromFile) {
     try {
-      await saveToRedis(fromFile);
+      await saveToRedis(forDurableStore(fromFile));
     } catch (error) {
       console.warn("Could not seed Redis from local state file:", error);
     }
@@ -120,8 +121,9 @@ export async function persistClassroomState(
   const durable = options.durable === true;
   const tasks: Promise<void>[] = [saveToFile(statePath, state)];
   if (durable && redisConfigured()) {
+    const durableState = forDurableStore(state);
     tasks.push(
-      saveToRedis(state).catch((error) => {
+      saveToRedis(durableState).catch((error) => {
         console.error("Failed to persist classroom state to Redis:", error);
       }),
     );

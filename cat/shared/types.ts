@@ -1,4 +1,4 @@
-export type Role = "aa" | "pa" | "student";
+export type Role = "aa" | "pa" | "student" | "guest";
 export type Zone = "advisor" | "student";
 
 export interface SeatRef {
@@ -20,6 +20,11 @@ export interface ClassroomState {
   seatsPerRow: number;
   placements: Record<string, SeatRef>;
   profiles: Record<string, PersonProfile>;
+  /**
+   * Temporary auditor cards for this live session only.
+   * Synced over Socket.io, never written to Redis.
+   */
+  guests: Person[];
 }
 
 export interface Person {
@@ -52,3 +57,4 @@ export interface ServerSnapshot {
 
 export const MAX_PHOTO_DATA_URL_LENGTH = 180_000;
 export const MAX_PROFILE_TEXT_LENGTH = 80;
+export const MAX_GUEST_NAME_LENGTH = 40;

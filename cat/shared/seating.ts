@@ -1,5 +1,9 @@
-import type { ClassroomState, PersonProfile, SeatRef, Zone } from "./types.ts";
-import { MAX_PHOTO_DATA_URL_LENGTH, MAX_PROFILE_TEXT_LENGTH } from "./types.ts";
+import type { ClassroomState, Person, PersonProfile, SeatRef, Zone } from "./types.ts";
+import {
+  MAX_GUEST_NAME_LENGTH,
+  MAX_PHOTO_DATA_URL_LENGTH,
+  MAX_PROFILE_TEXT_LENGTH,
+} from "./types.ts";
 
 export const MIN_STUDENT_ROWS = 1;
 export const MAX_STUDENT_ROWS = 12;
@@ -18,6 +22,7 @@ export const DEFAULT_STATE: ClassroomState = {
   seatsPerRow: 10,
   placements: {},
   profiles: {},
+  guests: [],
 };
 
 export function cloneState(state: ClassroomState): ClassroomState {
@@ -26,7 +31,86 @@ export function cloneState(state: ClassroomState): ClassroomState {
     seatsPerRow: state.seatsPerRow,
     placements: { ...state.placements },
     profiles: { ...state.profiles },
+    guests: state.guests.map((guest) => ({ ...guest })),
   };
+}
+
+export function isGuestId(personId: string): boolean {
+  return personId.startsWith("guest-");
+}
+
+export function guestIdsOf(state: ClassroomState): Set<string> {
+  return new Set((state.guests ?? []).map((guest) => guest.id));
+}
+
+/** Drop temporary auditors before writing to Redis. */
+export function forDurableStore(state: ClassroomState): ClassroomState {
+  const guestIds = guestIdsOf(state);
+  const placements: Record<string, SeatRef> = {};
+  const profiles: Record<string, PersonProfile> = {};
+  for (const [personId, placement] of Object.entries(state.placements)) {
+    if (!guestIds.has(personId)) {
+      placements[personId] = placement;
+    }
+  }
+  for (const [personId, profile] of Object.entries(state.profiles)) {
+    if (!guestIds.has(personId)) {
+      profiles[personId] = profile;
+    }
+  }
+  return {
+    studentRowCount: state.studentRowCount,
+    seatsPerRow: state.seatsPerRow,
+    placements,
+    profiles,
+    guests: [],
+  };
+}
+
+export function createGuestPerson(name: string, englishName = ""): Person {
+  const trimmedName = name.trim().slice(0, MAX_GUEST_NAME_LENGTH);
+  const trimmedEnglish = englishName.trim().slice(0, MAX_GUEST_NAME_LENGTH);
+  if (!trimmedName) {
+    throw new Error("Enter a display name for the temporary card.");
+  }
+  const id =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? `guest-${crypto.randomUUID()}`
+      : `guest-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return {
+    id,
+    name: trimmedName,
+    englishName: trimmedEnglish,
+    role: "guest",
+    college: "",
+    plan: "",
+  };
+}
+
+export function addGuest(state: ClassroomState, guest: Person): ClassroomState {
+  if (guest.role !== "guest" || !isGuestId(guest.id)) {
+    throw new Error("Invalid temporary name card.");
+  }
+  if ((state.guests ?? []).some((entry) => entry.id === guest.id)) {
+    throw new Error("That temporary card already exists.");
+  }
+  if ((state.guests ?? []).length >= 40) {
+    throw new Error("Too many temporary cards for this session.");
+  }
+  const next = cloneState(state);
+  next.guests = [...next.guests, guest];
+  return next;
+}
+
+export function removeGuest(state: ClassroomState, personId: string): ClassroomState {
+  if (!isGuestId(personId)) {
+    throw new Error("Only temporary cards can be removed this way.");
+  }
+  const next = cloneState(state);
+  next.guests = next.guests.filter((guest) => guest.id !== personId);
+  delete next.placements[personId];
+  delete next.profiles[personId];
+  return next;
 }
 
 export function seatKey(zone: Zone, row: number, seat: number): string {
@@ -133,6 +217,7 @@ export function resetSeating(state: ClassroomState): ClassroomState {
     seatsPerRow: state.seatsPerRow,
     placements: {},
     profiles: { ...state.profiles },
+    guests: state.guests.map((guest) => ({ ...guest })),
   };
 }
 
@@ -242,15 +327,35 @@ export function isClassroomState(value: unknown): value is ClassroomState {
       return false;
     }
   }
+  if (state.guests === undefined) {
+    return true;
+  }
+  if (!Array.isArray(state.guests)) {
+    return false;
+  }
+  for (const guest of state.guests) {
+    if (
+      typeof guest !== "object" ||
+      guest === null ||
+      typeof guest.id !== "string" ||
+      !isGuestId(guest.id) ||
+      guest.role !== "guest" ||
+      typeof guest.name !== "string" ||
+      typeof guest.englishName !== "string"
+    ) {
+      return false;
+    }
+  }
   return true;
 }
 
-/** Migrate older saved state that lacked profiles. */
+/** Migrate older saved state that lacked profiles / guests. */
 export function normalizeLoadedState(value: ClassroomState): ClassroomState {
   return {
     studentRowCount: value.studentRowCount,
     seatsPerRow: value.seatsPerRow,
     placements: value.placements,
     profiles: value.profiles ?? {},
+    guests: Array.isArray(value.guests) ? value.guests : [],
   };
 }

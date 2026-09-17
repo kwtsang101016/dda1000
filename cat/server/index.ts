@@ -10,15 +10,19 @@ import { loadCredentialHashes, secretsMatch } from "./credentials.ts";
 import { durableStoreEnabled, loadClassroomState, persistClassroomState } from "./stateStore.ts";
 import {
   DEFAULT_STATE,
+  addGuest,
+  createGuestPerson,
+  isGuestId,
   isSeatRef,
   normalizeProfile,
   placePerson,
+  removeGuest,
   resetSeating,
   setLayout,
   unseatPerson,
   updateProfile,
 } from "../shared/seating.ts";
-import type { ClassroomState, Roster, ServerSnapshot } from "../shared/types.ts";
+import type { ClassroomState, Person, Roster, ServerSnapshot } from "../shared/types.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
@@ -55,7 +59,19 @@ function emitAuthState(socket: Socket): void {
   });
 }
 
+function findGuest(personId: string): Person | undefined {
+  return (state.guests ?? []).find((guest) => guest.id === personId);
+}
+
+function isKnownPerson(personId: string): boolean {
+  return personIds.has(personId) || Boolean(findGuest(personId));
+}
+
 function canControl(socket: Socket, personId: string): boolean {
+  if (isGuestId(personId) && findGuest(personId)) {
+    // Temporary auditor cards are open for the live session (no student ID).
+    return true;
+  }
   const auth = getAuth(socket);
   return auth.isInstructor || auth.authorizedIds.has(personId);
 }
@@ -238,7 +254,7 @@ async function main(): Promise<void> {
           throw new Error("Invalid place payload.");
         }
         const { personId, target } = payload as { personId?: unknown; target?: unknown };
-        if (typeof personId !== "string" || !personIds.has(personId)) {
+        if (typeof personId !== "string" || !isKnownPerson(personId)) {
           throw new Error("Unknown name card.");
         }
         if (!isSeatRef(target)) {
@@ -246,7 +262,7 @@ async function main(): Promise<void> {
         }
         requireControl(socket, personId);
         state = placePerson(state, personId, target);
-        await persistState(state);
+        await persistState(state, false);
         emitState();
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not place that card.";
@@ -260,12 +276,12 @@ async function main(): Promise<void> {
           throw new Error("Invalid unseat payload.");
         }
         const { personId } = payload as { personId?: unknown };
-        if (typeof personId !== "string" || !personIds.has(personId)) {
+        if (typeof personId !== "string" || !isKnownPerson(personId)) {
           throw new Error("Unknown name card.");
         }
         requireControl(socket, personId);
         state = unseatPerson(state, personId);
-        await persistState(state);
+        await persistState(state, false);
         emitState();
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not return that card.";
@@ -287,7 +303,7 @@ async function main(): Promise<void> {
           throw new Error("Row and seat counts must be numbers.");
         }
         state = setLayout(state, studentRowCount, seatsPerRow);
-        await persistState(state);
+        await persistState(state, false);
         emitState();
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not update the layout.";
@@ -301,17 +317,57 @@ async function main(): Promise<void> {
           throw new Error("Invalid profile payload.");
         }
         const { personId, profile } = payload as { personId?: unknown; profile?: unknown };
-        if (typeof personId !== "string" || !personIds.has(personId)) {
+        if (typeof personId !== "string" || !isKnownPerson(personId)) {
           throw new Error("Unknown name card.");
         }
         requireControl(socket, personId);
         const normalized = normalizeProfile(profile);
         state = updateProfile(state, personId, normalized);
-        // Photos / college / country / hobbies: write through to Redis immediately.
-        await persistState(state, true);
+        // Roster profile edits go to Redis; temporary guest cards stay session-only.
+        await persistState(state, !isGuestId(personId));
         emitState();
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not save the name card.";
+        socket.emit("error-message", message);
+      }
+    });
+
+    socket.on("addGuest", async (payload: unknown) => {
+      try {
+        if (typeof payload !== "object" || payload === null) {
+          throw new Error("Invalid temporary card payload.");
+        }
+        const { name, englishName } = payload as { name?: unknown; englishName?: unknown };
+        if (typeof name !== "string") {
+          throw new Error("Enter a display name for the temporary card.");
+        }
+        const guest = createGuestPerson(
+          name,
+          typeof englishName === "string" ? englishName : "",
+        );
+        state = addGuest(state, guest);
+        await persistState(state, false);
+        emitState();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Could not add a temporary card.";
+        socket.emit("error-message", message);
+      }
+    });
+
+    socket.on("removeGuest", async (payload: unknown) => {
+      try {
+        if (typeof payload !== "object" || payload === null) {
+          throw new Error("Invalid temporary card payload.");
+        }
+        const { personId } = payload as { personId?: unknown };
+        if (typeof personId !== "string" || !findGuest(personId)) {
+          throw new Error("Unknown temporary card.");
+        }
+        state = removeGuest(state, personId);
+        await persistState(state, false);
+        emitState();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Could not remove that temporary card.";
         socket.emit("error-message", message);
       }
     });
@@ -320,7 +376,7 @@ async function main(): Promise<void> {
       try {
         requireInstructor(socket);
         state = resetSeating(state);
-        await persistState(state);
+        await persistState(state, false);
         emitState();
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not reset the table.";

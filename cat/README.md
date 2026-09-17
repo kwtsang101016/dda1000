@@ -10,6 +10,8 @@ Realtime seating board for lecture **L12** (academic advisor 曾家炜 / Ka Wai 
 4. Double-tap a seated card to stand up
 5. Press and hold a seat to see photo / college / country / hobbies
 6. Use **Edit** to update your card (also requires your student ID)
+7. Search by name, college, country, hobbies, etc. — waiting matches are purple; seated matches are teal
+8. Auditors can **Add temporary card** (green-tinted); those cards sync live for the class but are **not** saved to Redis
 
 Student IDs are checked only on the server as one-way hashes. The public website and GitHub repo do not contain raw IDs.
 

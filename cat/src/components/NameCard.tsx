@@ -8,6 +8,8 @@ interface NameCardProps {
   enlarged?: boolean;
   selected?: boolean;
   highlighted?: boolean;
+  /** Waiting matches = purple; seated matches = teal. */
+  highlightKind?: "waiting" | "seated";
 }
 
 export function NameCard({
@@ -16,9 +18,24 @@ export function NameCard({
   enlarged = false,
   selected = false,
   highlighted = false,
+  highlightKind = "waiting",
 }: NameCardProps) {
   const roleLabel =
-    person.role === "aa" ? "AA" : person.role === "pa" ? (person.leading ? "PA · lead" : "PA") : "Student";
+    person.role === "aa"
+      ? "AA"
+      : person.role === "pa"
+        ? person.leading
+          ? "PA · lead"
+          : "PA"
+        : person.role === "guest"
+          ? "Guest"
+          : "Student";
+
+  const highlightClass = highlighted
+    ? highlightKind === "seated"
+      ? "name-card--highlighted-seated"
+      : "name-card--highlighted"
+    : "";
 
   if (compact && !enlarged) {
     return (
@@ -28,7 +45,7 @@ export function NameCard({
           "name-card--compact",
           `name-card--${person.role}`,
           selected ? "name-card--selected" : "",
-          highlighted ? "name-card--highlighted" : "",
+          highlightClass,
         ]
           .filter(Boolean)
           .join(" ")}
@@ -45,7 +62,7 @@ export function NameCard({
         `name-card--${person.role}`,
         enlarged ? "name-card--enlarged" : "",
         selected ? "name-card--selected" : "",
-        highlighted ? "name-card--highlighted" : "",
+        highlightClass,
         person.displayPhoto ? "name-card--has-photo" : "",
       ]
         .filter(Boolean)
@@ -61,6 +78,7 @@ export function NameCard({
         {person.displayCollege ? <p className="name-card__meta">{person.displayCollege}</p> : null}
         {person.displayCountry ? <p className="name-card__meta">{person.displayCountry}</p> : null}
         {person.displayHobbies ? <p className="name-card__meta">{person.displayHobbies}</p> : null}
+        {person.plan ? <p className="name-card__meta">{person.plan}</p> : null}
       </div>
     </article>
   );

@@ -105,7 +105,13 @@ export function Seat({
       aria-label={occupant ? `${occupant.name} seat` : "Empty seat"}
     >
       {occupant ? (
-        <NameCard person={occupant} compact selected={selected} highlighted={highlighted} />
+        <NameCard
+          person={occupant}
+          compact
+          selected={selected}
+          highlighted={highlighted}
+          highlightKind="seated"
+        />
       ) : (
         <span className="seat__placeholder">sit here</span>
       )}

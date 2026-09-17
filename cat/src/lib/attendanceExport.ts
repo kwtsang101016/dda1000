@@ -34,10 +34,11 @@ function escapeCsv(value: string): string {
 export function buildAttendanceRows(
   roster: Roster,
   state: ClassroomState,
+  people: Person[] = roster.people,
   recordedAt: Date = new Date(),
 ): AttendanceRow[] {
   const iso = recordedAt.toISOString();
-  return roster.people.map((person: Person) => {
+  return people.map((person: Person) => {
     const placement = state.placements[person.id];
     if (!placement) {
       return {
@@ -117,8 +118,13 @@ function stampForFilename(date: Date): string {
 }
 
 /** Triggers a CSV download in the browser (works well on phones → Downloads / Files). */
-export function downloadAttendanceCsv(roster: Roster, state: ClassroomState, recordedAt = new Date()): void {
-  const rows = buildAttendanceRows(roster, state, recordedAt);
+export function downloadAttendanceCsv(
+  roster: Roster,
+  state: ClassroomState,
+  people: Person[] = roster.people,
+  recordedAt = new Date(),
+): void {
+  const rows = buildAttendanceRows(roster, state, people, recordedAt);
   const csv = attendanceRowsToCsv(rows);
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);

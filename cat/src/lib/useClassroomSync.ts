@@ -1,6 +1,6 @@
 import { io, type Socket } from "socket.io-client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DEFAULT_STATE } from "../../shared/seating.ts";
+import { DEFAULT_STATE, isGuestId } from "../../shared/seating.ts";
 import type {
   ClassroomState,
   PersonProfile,
@@ -28,8 +28,18 @@ interface ClassroomSync {
   unseat: (personId: string) => void;
   setLayout: (studentRowCount: number, seatsPerRow: number) => void;
   updateProfile: (personId: string, profile: PersonProfile) => void;
+  addGuest: (name: string, englishName?: string) => void;
+  removeGuest: (personId: string) => void;
   reset: () => void;
   canControl: (personId: string) => boolean;
+}
+
+function normalizeClientState(state: ClassroomState): ClassroomState {
+  return {
+    ...state,
+    profiles: state.profiles ?? {},
+    guests: Array.isArray(state.guests) ? state.guests : [],
+  };
 }
 
 export function useClassroomSync(): ClassroomSync {
@@ -53,10 +63,7 @@ export function useClassroomSync(): ClassroomSync {
     socketRef.current = socket;
 
     const onSnapshot = (snapshot: ServerSnapshot) => {
-      setState({
-        ...snapshot.state,
-        profiles: snapshot.state.profiles ?? {},
-      });
+      setState(normalizeClientState(snapshot.state));
       setConnectedCount(snapshot.connectedCount);
       setStatus("live");
     };
@@ -153,10 +160,17 @@ export function useClassroomSync(): ClassroomSync {
       updateProfile: (personId, profile) => {
         socketRef.current?.emit("updateProfile", { personId, profile });
       },
+      addGuest: (name, englishName = "") => {
+        socketRef.current?.emit("addGuest", { name, englishName });
+      },
+      removeGuest: (personId) => {
+        socketRef.current?.emit("removeGuest", { personId });
+      },
       reset: () => {
         socketRef.current?.emit("reset");
       },
-      canControl: (personId: string) => isInstructor || authorizedIds.has(personId),
+      canControl: (personId: string) =>
+        isGuestId(personId) || isInstructor || authorizedIds.has(personId),
     }),
     [authorizedIds, connectedCount, errorMessage, isInstructor, state, status],
   );
