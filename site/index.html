@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="DDA1000 Freshmen Induction and Academic Planning — course calendar, CAT, and session slides." />
+    <title>DDA1000 · Freshmen Induction and Academic Planning</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --ink: #16213c;
+        --cream: #fff4d2;
+        --paper: #f5cf6b;
+        --red: #df4a3e;
+        --white: #ffffff;
+        --muted: #5f6675;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        color: var(--ink);
+        background: var(--cream);
+      }
+      .top {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 20px 24px 0;
+        display: flex;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+      }
+      .top a {
+        font: 700 14px/1 Inter, ui-sans-serif, system-ui, sans-serif;
+        letter-spacing: 0.04em;
+        color: var(--ink);
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        padding-bottom: 2px;
+      }
+      .top a:hover {
+        border-bottom-color: var(--red);
+        color: var(--red);
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 28px 24px 64px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(28px, 5vw, 40px);
+        line-height: 1.1;
+      }
+      .kicker {
+        margin: 0 0 20px;
+        font: 800 12px/1 ui-monospace, monospace;
+        letter-spacing: 0.1em;
+        color: var(--red);
+        text-transform: uppercase;
+      }
+      .lead {
+        margin: 0 0 28px;
+        font-size: 17px;
+        line-height: 1.5;
+      }
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+      a.card {
+        display: block;
+        padding: 20px 22px;
+        color: inherit;
+        text-decoration: none;
+        background: var(--white);
+        border: 3px solid var(--ink);
+        box-shadow: 5px 5px 0 var(--ink);
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+      }
+      a.card:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 7px 7px 0 var(--ink);
+      }
+      a.card strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 20px;
+      }
+      a.card span {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      footer {
+        margin-top: 36px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top">
+      <a href="./calendar/">Calendar</a>
+      <a href="https://dda1000-cat.onrender.com/" target="_blank" rel="noreferrer">CAT</a>
+    </div>
+    <main>
+      <p class="kicker">CUHK(SZ) · DDA1000</p>
+      <h1>Freshmen Induction and Academic Planning</h1>
+      <p class="lead">School of Data Science · Fall 2026–27 — choose a topic below.</p>
+      <div class="grid">
+        <a class="card" href="https://dda1000-cat.onrender.com/arrangement/" target="_blank" rel="noreferrer">
+          <strong>Arrangement</strong>
+          <span>Weekly schedule, separate / joint / small-group sessions, invited speakers, assessment, and the course journal.</span>
+        </a>
+        <a class="card" href="./what_and_why/">
+          <strong>Studying at SDS: What and Why</strong>
+          <span>From data to decisions — uncertainty, models, and risk; the SDS majors and the FE pathway.</span>
+        </a>
+        <a class="card" href="./academic_honesty/">
+          <strong>Academic Honesty</strong>
+          <span>The online quiz, red lines, citation, AI and paid services, exam rules, case procedures, and consequences.</span>
+        </a>
+        <a class="card" href="./study_schemes/">
+          <strong>SDS Study Schemes</strong>
+          <span>Graduation requirements, school packages, and major required courses for DSBDT, CSE, STA, and FE.</span>
+        </a>
+      </div>
+      <footer>More topics will be added to this site during the semester.</footer>
+    </main>
+  </body>
+</html>

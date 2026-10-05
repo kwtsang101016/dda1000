@@ -1,0 +1,82 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "cat/**"
+      - "render.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: |
+            calendar/package-lock.json
+            what_and_why/package-lock.json
+            academic_honesty/package-lock.json
+            study_schemes/package-lock.json
+
+      - name: Install and build calendar
+        run: |
+          npm ci --prefix calendar
+          npm run build --prefix calendar
+
+      - name: Install and build what_and_why
+        run: |
+          npm ci --prefix what_and_why
+          npm run build --prefix what_and_why
+
+      - name: Install and build academic_honesty
+        run: |
+          npm ci --prefix academic_honesty
+          npm run build --prefix academic_honesty
+
+      - name: Install and build study_schemes
+        run: |
+          npm ci --prefix study_schemes
+          npm run build --prefix study_schemes
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site/calendar _site/what_and_why _site/academic_honesty _site/study_schemes
+          cp -r calendar/dist/* _site/calendar/
+          cp -r what_and_why/dist/* _site/what_and_why/
+          cp -r academic_honesty/dist/* _site/academic_honesty/
+          cp -r study_schemes/dist/* _site/study_schemes/
+          cp site/index.html _site/index.html
+          touch _site/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

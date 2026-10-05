@@ -1,0 +1,331 @@
+{
+  "course": "DDA1000",
+  "section": "L12",
+  "classroom": "Teaching D Bldg 113",
+  "people": [
+    {
+      "id": "aa-tsang",
+      "name": "曾家炜",
+      "englishName": "Ka Wai Tsang",
+      "role": "aa",
+      "college": "",
+      "plan": "",
+      "photo": "/photos/aa-tsang.png"
+    },
+    {
+      "id": "pa-01",
+      "name": "张雅婧",
+      "englishName": "",
+      "role": "pa",
+      "college": "",
+      "plan": "",
+      "leading": true
+    },
+    {
+      "id": "pa-02",
+      "name": "吴蔡延",
+      "englishName": "",
+      "role": "pa",
+      "college": "",
+      "plan": "",
+      "leading": false
+    },
+    {
+      "id": "pa-03",
+      "name": "梁心睿",
+      "englishName": "",
+      "role": "pa",
+      "college": "",
+      "plan": "",
+      "leading": false
+    },
+    {
+      "id": "stu-01",
+      "name": "梁语心",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-02",
+      "name": "林乔莹",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-03",
+      "name": "林湛恩",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-04",
+      "name": "刘杰睿",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-05",
+      "name": "刘君昊",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-06",
+      "name": "刘一凡",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-07",
+      "name": "孙贲",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-08",
+      "name": "吕文恺",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-09",
+      "name": "唐婧",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-10",
+      "name": "田梓仟",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-11",
+      "name": "王子墨",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-12",
+      "name": "萧诺",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-13",
+      "name": "吴洛宇",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-14",
+      "name": "李佶喆",
+      "englishName": "",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-15",
+      "name": "廖欣驰",
+      "englishName": "",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-16",
+      "name": "马钰森",
+      "englishName": "",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-17",
+      "name": "倪溯飞",
+      "englishName": "",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-18",
+      "name": "牛英儒",
+      "englishName": "",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-19",
+      "name": "欧阳志颖",
+      "englishName": "",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-20",
+      "name": "潘卫东",
+      "englishName": "",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-21",
+      "name": "潘锡楷",
+      "englishName": "",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-22",
+      "name": "荣统宝",
+      "englishName": "",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-23",
+      "name": "商熵",
+      "englishName": "",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-24",
+      "name": "孙苗馨",
+      "englishName": "",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS"
+    },
+    {
+      "id": "stu-25",
+      "name": "高和兴",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering"
+    },
+    {
+      "id": "stu-26",
+      "name": "林钰",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering"
+    },
+    {
+      "id": "stu-27",
+      "name": "刘硕",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering"
+    },
+    {
+      "id": "stu-28",
+      "name": "马睿言",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering"
+    },
+    {
+      "id": "stu-29",
+      "name": "彭俊豪",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering"
+    },
+    {
+      "id": "stu-30",
+      "name": "沈也",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering"
+    },
+    {
+      "id": "stu-31",
+      "name": "王子宸",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering"
+    },
+    {
+      "id": "stu-32",
+      "name": "肖逸航",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering"
+    },
+    {
+      "id": "stu-33",
+      "name": "杨彬睿",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering"
+    },
+    {
+      "id": "stu-34",
+      "name": "叶一诺",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering"
+    },
+    {
+      "id": "stu-35",
+      "name": "张馨文",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering"
+    },
+    {
+      "id": "stu-36",
+      "name": "郑子墨",
+      "englishName": "",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering"
+    }
+  ]
+}
