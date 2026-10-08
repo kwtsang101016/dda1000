@@ -825,3 +825,27 @@
   .scene { padding: 28px 18px 40px; }
   .coverInner { padding: 36px 18px; }
 }
+
+/* ── FE stream footnotes ── */
+.streamMark {
+  margin-left: 1px;
+  color: var(--gold);
+  font-size: 0.7em;
+  font-weight: 900;
+}
+
+.streamKey {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 12px;
+  width: fit-content;
+  margin: 24px 0 0 50%;
+  font-size: 17px;
+}
+
+.streamKey dt { font-weight: 800; }
+.streamKey dd { margin: 0; }
+
+@media (max-width: 900px) {
+  .streamKey { margin-left: 0; }
+}

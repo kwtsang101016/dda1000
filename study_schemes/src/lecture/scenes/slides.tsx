@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import styles from "../Lecture.module.css";
 import { usePrintMode } from "../printContext";
 import { BulletList, Figure, Notes, SceneFrame } from "./shared";
@@ -88,12 +89,16 @@ function ChoiceLegend({ groups }: { groups: ChoiceLegendGroup[] }) {
   );
 }
 
+function StreamMark({ stream }: { stream: "a" | "b" }) {
+  return <sup className={styles.streamMark}>{stream}</sup>;
+}
+
 function RequirementTree({
   root,
   branches,
 }: {
   root: string[];
-  branches: Array<{ title: string; units: string; note: string }>;
+  branches: Array<{ title: string; units: ReactNode; note: string }>;
 }) {
   return (
     <div className={styles.tree}>
@@ -342,14 +347,36 @@ export function FeStructureScene() {
         root={["Major requirement", "(70 units)"]}
         branches={[
           { title: "School package", units: "(25 units)", note: "Required for all students in FE" },
-          { title: "Major required", units: "(30 units)", note: "Required for all students in FE" },
-          { title: "Major electives", units: "(15 units)", note: "Can be selected by all students in FE" },
+          {
+            title: "Major required",
+            units: (
+              <>
+                (30<StreamMark stream="a" /> or 24<StreamMark stream="b" /> units)
+              </>
+            ),
+            note: "Required for all students in FE",
+          },
+          {
+            title: "Major electives",
+            units: (
+              <>
+                (15<StreamMark stream="a" /> or 21<StreamMark stream="b" /> units)
+              </>
+            ),
+            note: "Can be selected by all students in FE",
+          },
         ]}
       />
+      <dl className={styles.streamKey}>
+        <dt>a:</dt>
+        <dd>Quantitative Finance Stream</dd>
+        <dt>b:</dt>
+        <dd>FinTech Stream</dd>
+      </dl>
       <Notes
         paragraphs={[
           "This is the major curriculum for FE.",
-          "The key difference compared to other  SDS majors is that the proportion of compulsory courses is large, i.e., 55 units out of 70.",
+          "The key difference compared to other SDS majors is that the proportion of compulsory courses is larger, i.e., 55/49 units out of 70.",
         ]}
       />
     </SceneFrame>
