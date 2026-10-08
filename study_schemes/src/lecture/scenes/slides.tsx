@@ -463,10 +463,11 @@ export function StreamsScene() {
     <SceneFrame title="Streams of specialization">
       <BulletList
         items={[
+          "CSE/DSBDT/STA students may declare one of the specialization streams (after meeting the requirements). They can also choose no specialization.",
           "Each specialization stream has a set of designated elective courses for students to take.",
-          "One function of such arrangement is to provide guidance for students in course selection.",
+          "One function of such arrangement is to provide guidance for students in course selection, esp. major electives.",
           "Students can declare the specialization at their expected graduation term. No need to apply beforehand.",
-          "Students may decide not to declare any stream.",
+          "FE students must specialize in one of the two specialization streams. The declaration is done at the end of Year 1.",
         ]}
       />
     </SceneFrame>
