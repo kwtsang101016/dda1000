@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import styles from "../Lecture.module.css";
 import { usePrintMode } from "../printContext";
 import { Block, BulletList, Callout, DataTable, Grid, SceneFrame } from "./shared";
@@ -427,7 +428,7 @@ export function SchoolPackageScene() {
   );
 }
 
-function PathwayScene({ kicker, title, tagline, points }: { kicker: string; title: string; tagline: string; points: string[] }) {
+function PathwayScene({ kicker, title, tagline, points }: { kicker: string; title: string; tagline: string; points: ReactNode[] }) {
   return (
     <SceneFrame kicker={kicker} title={title}>
       <p className={styles.lead}>
@@ -481,6 +482,12 @@ export function StatisticsScene() {
         "Tools and models will keep iterating. Probability, inference, and experimental design do not go out of date.",
         "It leads to biostatistics, financial risk, and research, and it also gives a solid foundation for data science and AI.",
         "In an era when AI can answer quickly, statistics helps you ask whether the answer is trustworthy, where bias comes from, and whether a conclusion can survive scrutiny.",
+        <>
+          STAT and DSBDT are quite close, and to differentiate them a bit, please visit{" "}
+          <a href="https://sta-sds.github.io/why_statistics/" target="_blank" rel="noreferrer">
+            https://sta-sds.github.io/why_statistics/
+          </a>
+        </>,
       ]}
     />
   );
