@@ -62,6 +62,7 @@ jobs:
           cp -r what_and_why/dist/* _site/what_and_why/
           cp -r academic_honesty/dist/* _site/academic_honesty/
           cp -r study_schemes/dist/* _site/study_schemes/
+          cp -r arrangement _site/arrangement
           cp site/index.html _site/index.html
           touch _site/.nojekyll
 

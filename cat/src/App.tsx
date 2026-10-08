@@ -256,7 +256,7 @@ export default function App() {
           </p>
           <div className="title-row">
             <h1>Class Attending Table</h1>
-            <a className="title-link" href="/arrangement/">
+            <a className="title-link" href="https://kwtsang101016.github.io/dda1000/arrangement/">
               Arrangement
             </a>
             <a
