@@ -34,6 +34,7 @@ jobs:
             what_and_why/package-lock.json
             academic_honesty/package-lock.json
             study_schemes/package-lock.json
+            personality_type_test/package-lock.json
 
       - name: Install and build calendar
         run: |
@@ -55,13 +56,19 @@ jobs:
           npm ci --prefix study_schemes
           npm run build --prefix study_schemes
 
+      - name: Install and build personality_type_test
+        run: |
+          npm ci --prefix personality_type_test
+          npm run build --prefix personality_type_test
+
       - name: Assemble site
         run: |
-          mkdir -p _site/calendar _site/what_and_why _site/academic_honesty _site/study_schemes
+          mkdir -p _site/calendar _site/what_and_why _site/academic_honesty _site/study_schemes _site/personality_type_test
           cp -r calendar/dist/* _site/calendar/
           cp -r what_and_why/dist/* _site/what_and_why/
           cp -r academic_honesty/dist/* _site/academic_honesty/
           cp -r study_schemes/dist/* _site/study_schemes/
+          cp -r personality_type_test/dist/* _site/personality_type_test/
           cp -r arrangement _site/arrangement
           cp site/index.html _site/index.html
           touch _site/.nojekyll

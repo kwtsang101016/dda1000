@@ -7,10 +7,12 @@
     "dev:why": "npm run dev --prefix what_and_why",
     "dev:honesty": "npm run dev --prefix academic_honesty",
     "dev:schemes": "npm run dev --prefix study_schemes",
+    "dev:personality": "npm run dev --prefix personality_type_test",
     "build:cal": "npm run build --prefix calendar",
     "build:why": "npm run build --prefix what_and_why",
     "build:honesty": "npm run build --prefix academic_honesty",
     "build:schemes": "npm run build --prefix study_schemes",
-    "build:all": "npm run build:cal && npm run build:why && npm run build:honesty && npm run build:schemes"
+    "build:personality": "npm run build --prefix personality_type_test",
+    "build:all": "npm run build:cal && npm run build:why && npm run build:honesty && npm run build:schemes && npm run build:personality"
   }
 }

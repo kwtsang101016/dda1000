@@ -12,6 +12,7 @@ Course homepage: <https://kwtsang101016.github.io/dda1000/>
 | [`what_and_why/`](./what_and_why/) | Slides: Studying at SDS — What and Why | GitHub Pages `/dda1000/what_and_why/` |
 | [`academic_honesty/`](./academic_honesty/) | Slides: Academic Honesty | GitHub Pages `/dda1000/academic_honesty/` |
 | [`study_schemes/`](./study_schemes/) | Slides: SDS Study Schemes | GitHub Pages `/dda1000/study_schemes/` |
+| [`personality_type_test/`](./personality_type_test/) | Slides: Personality Type Test (pre-lesson task for 16 Oct) | GitHub Pages `/dda1000/personality_type_test/` |
 | [`cat/`](./cat/) | Class Attending Table (live seating board for L12); its `/arrangement/` redirects to GitHub Pages | Render: <https://dda1000-cat.onrender.com/> |
 
 ## GitHub Pages
