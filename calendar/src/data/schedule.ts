@@ -40,6 +40,7 @@ export const COURSE_EVENTS: CourseEvent[] = [
     title: "Studying at SDS — What and Why",
     kind: "separate",
     venue: SEPARATE_VENUE,
+    attendanceFile: "2026-10-09.json",
   },
   {
     date: "2026-10-16",
