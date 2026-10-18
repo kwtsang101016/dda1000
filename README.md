@@ -10,6 +10,7 @@ Course homepage: <https://kwtsang101016.github.io/dda1000/>
 | [`arrangement/`](./arrangement/) | Course arrangement (schedule, speakers, assessment, journal) — static HTML | GitHub Pages `/dda1000/arrangement/` |
 | [`calendar/`](./calendar/) | Course calendar with separate / joint / small-group sessions and saved CAT attendance | GitHub Pages `/dda1000/calendar/` |
 | [`what_and_why/`](./what_and_why/) | Slides: Studying at SDS — What and Why | GitHub Pages `/dda1000/what_and_why/` |
+| [`studying_how/`](./studying_how/) | Slides: Studying at SDS — How | GitHub Pages `/dda1000/studying_how/` |
 | [`academic_honesty/`](./academic_honesty/) | Slides: Academic Honesty | GitHub Pages `/dda1000/academic_honesty/` |
 | [`study_schemes/`](./study_schemes/) | Slides: SDS Study Schemes | GitHub Pages `/dda1000/study_schemes/` |
 | [`personality_type_test/`](./personality_type_test/) | Slides: Personality Type Test (pre-lesson task for 16 Oct) | GitHub Pages `/dda1000/personality_type_test/` |
