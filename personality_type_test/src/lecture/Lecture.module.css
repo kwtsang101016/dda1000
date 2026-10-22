@@ -902,3 +902,28 @@
   .taskLayout { grid-template-columns: 1fr; }
   .taskAside { position: static; }
 }
+/* ── Lam lecture additions ── */
+.typeGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-width: 420px;
+}
+.typeGrid span {
+  padding: 14px 4px;
+  color: var(--white);
+  background: var(--blue);
+  border: 3px solid var(--ink);
+  font-weight: 900;
+  text-align: center;
+}
+.typeGrid span:nth-child(4n+2) { background: var(--red); }
+.typeGrid span:nth-child(4n+3) { background: #2f9e44; }
+.typeGrid span:nth-child(4n) { background: #7048a8; }
+.typeBoxes {
+  margin-top: 28px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.typeBoxes p { margin: 10px 0; }
