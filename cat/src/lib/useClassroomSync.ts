@@ -51,6 +51,8 @@ interface ClassroomSync {
   clearError: () => void;
   join: () => void;
   leave: () => void;
+  /** Keep the socket while the instructor PIN modal is open (session may still be closed). */
+  holdConnectionForAuth: () => void;
   openSession: () => void;
   closeSession: () => void;
   startPoll: (question: string, optionLabels?: Partial<Record<PollChoice, string>>) => void;
@@ -86,6 +88,8 @@ export function useClassroomSync(): ClassroomSync {
   const sessionOpenRef = useRef(false);
   const wantConnectedRef = useRef(false);
   const closedKickTimerRef = useRef<number | null>(null);
+  /** Students leave quickly when closed; instructors need time to enter the PIN. */
+  const CLOSED_KICK_MS = 3 * 60 * 1000;
 
   const [state, setState] = useState<ClassroomState>(DEFAULT_STATE);
   const [connectedCount, setConnectedCount] = useState(0);
@@ -159,7 +163,7 @@ export function useClassroomSync(): ClassroomSync {
         }
       };
 
-      const scheduleClosedKick = () => {
+      const scheduleClosedKick = (delayMs = CLOSED_KICK_MS) => {
         clearClosedKickTimer();
         closedKickTimerRef.current = window.setTimeout(() => {
           if (!wantConnectedRef.current) {
@@ -169,10 +173,10 @@ export function useClassroomSync(): ClassroomSync {
             wantConnectedRef.current = false;
             teardownSocket("closed");
             setErrorMessage(
-              "Classroom session is closed. Wait for the instructor to open it, then tap Join.",
+              "Classroom session is closed. Instructors: Join, tap Instructor PIN within a few minutes, then Open session. Students: wait until the session is open.",
             );
           }
-        }, 2000);
+        }, delayMs);
       };
 
       socket.on("connect", () => {
@@ -284,6 +288,34 @@ export function useClassroomSync(): ClassroomSync {
     attachSocket(true);
   }, [attachSocket]);
 
+  const holdConnectionForAuth = useCallback(() => {
+    // Extend grace so entering the instructor PIN is not racing a short kick timer.
+    if (closedKickTimerRef.current != null) {
+      window.clearTimeout(closedKickTimerRef.current);
+      closedKickTimerRef.current = null;
+    }
+    if (!socketRef.current?.connected && wantConnectedRef.current === false) {
+      attachSocket(true);
+      return;
+    }
+    if (!socketRef.current) {
+      attachSocket(true);
+      return;
+    }
+    closedKickTimerRef.current = window.setTimeout(() => {
+      if (!wantConnectedRef.current) {
+        return;
+      }
+      if (!sessionOpenRef.current && !isInstructorRef.current) {
+        wantConnectedRef.current = false;
+        teardownSocket("closed");
+        setErrorMessage(
+          "Classroom session is closed. Instructors: Join, tap Instructor PIN, then Open session.",
+        );
+      }
+    }, CLOSED_KICK_MS);
+  }, [attachSocket, teardownSocket]);
+
   useEffect(() => {
     return () => {
       wantConnectedRef.current = false;
@@ -305,6 +337,7 @@ export function useClassroomSync(): ClassroomSync {
       clearError: () => setErrorMessage(null),
       join,
       leave,
+      holdConnectionForAuth,
       openSession: () => {
         socketRef.current?.emit("openSession");
       },
@@ -329,26 +362,56 @@ export function useClassroomSync(): ClassroomSync {
       },
       authorize: ({ personId, secret, asInstructor }) =>
         new Promise<void>((resolve, reject) => {
+          const run = (socket: Socket) => {
+            const timer = window.setTimeout(() => {
+              reject(new Error("Verification timed out. Try again."));
+            }, 8000);
+            socket.emit(
+              "authorize",
+              { personId, secret, asInstructor },
+              (response?: { ok: boolean; message?: string }) => {
+                window.clearTimeout(timer);
+                if (!response?.ok) {
+                  reject(new Error(response?.message || "Verification failed."));
+                  return;
+                }
+                resolve();
+              },
+            );
+          };
+
+          const existing = socketRef.current;
+          if (existing?.connected) {
+            run(existing);
+            return;
+          }
+
+          // Instructor PIN often opens while still connecting, or after a closed-session kick.
+          wantConnectedRef.current = true;
+          attachSocket(true);
           const socket = socketRef.current;
-          if (!socket?.connected) {
+          if (!socket) {
             reject(new Error("Not connected. Tap Join classroom first."));
             return;
           }
-          const timer = window.setTimeout(() => {
-            reject(new Error("Verification timed out. Try again."));
-          }, 8000);
-          socket.emit(
-            "authorize",
-            { personId, secret, asInstructor },
-            (response?: { ok: boolean; message?: string }) => {
-              window.clearTimeout(timer);
-              if (!response?.ok) {
-                reject(new Error(response?.message || "Verification failed."));
-                return;
-              }
-              resolve();
-            },
-          );
+          if (socket.connected) {
+            run(socket);
+            return;
+          }
+          const onConnect = () => {
+            socket.off("connect_error", onError);
+            run(socket);
+          };
+          const onError = () => {
+            socket.off("connect", onConnect);
+            reject(new Error("Could not connect. Tap Join classroom and try again."));
+          };
+          socket.once("connect", onConnect);
+          socket.once("connect_error", onError);
+          window.setTimeout(() => {
+            socket.off("connect", onConnect);
+            socket.off("connect_error", onError);
+          }, 10000);
         }),
       place: (personId, target) => {
         socketRef.current?.emit("place", { personId, target });
@@ -379,6 +442,7 @@ export function useClassroomSync(): ClassroomSync {
       connectedCount,
       errorMessage,
       isInstructor,
+      holdConnectionForAuth,
       join,
       leave,
       myPollChoice,
