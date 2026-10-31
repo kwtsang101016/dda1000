@@ -1,0 +1,93 @@
+.major-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+}
+
+.major-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.05rem;
+  border-radius: 12px;
+  border: 1px solid rgba(10, 77, 74, 0.16);
+  background: rgba(255, 252, 245, 0.9);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.major-card:hover {
+  border-color: rgba(10, 77, 74, 0.4);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.major-card--active {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 2px rgba(10, 77, 74, 0.18);
+  background: #fff;
+}
+
+.major-card__code {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--teal);
+}
+
+.major-card__label {
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.major-card__meta {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.fe-stream {
+  margin-top: 1.5rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(10, 77, 74, 0.28);
+  background: rgba(10, 77, 74, 0.04);
+}
+
+.fe-stream h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.fe-stream p {
+  margin: 0 0 0.85rem;
+  color: var(--ink-muted);
+  font-size: 0.92rem;
+}
+
+.fe-stream__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.fe-stream__btn {
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(10, 77, 74, 0.25);
+  background: #fffdf8;
+  font: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+
+.fe-stream__btn--active {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #f7f3ea;
+}

@@ -9,12 +9,14 @@
     "dev:schemes": "npm run dev --prefix study_schemes",
     "dev:personality": "npm run dev --prefix personality_type_test",
     "dev:how": "npm run dev --prefix studying_how",
+    "dev:planner": "npm run dev --prefix study_planner",
     "build:cal": "npm run build --prefix calendar",
     "build:why": "npm run build --prefix what_and_why",
     "build:honesty": "npm run build --prefix academic_honesty",
     "build:schemes": "npm run build --prefix study_schemes",
     "build:personality": "npm run build --prefix personality_type_test",
     "build:how": "npm run build --prefix studying_how",
-    "build:all": "npm run build:cal && npm run build:why && npm run build:honesty && npm run build:schemes && npm run build:personality && npm run build:how"
+    "build:planner": "npm run build --prefix study_planner",
+    "build:all": "npm run build:cal && npm run build:why && npm run build:honesty && npm run build:schemes && npm run build:personality && npm run build:how && npm run build:planner"
   }
 }

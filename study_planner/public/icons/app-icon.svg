@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="112" fill="#0c0e14"/>
+  <rect x="48" y="48" width="416" height="416" rx="88" fill="#1a1f2a" stroke="#6366f1" stroke-width="8"/>
+  <text x="256" y="220" text-anchor="middle" font-family="system-ui,sans-serif" font-size="120" font-weight="700" fill="#a5b4fc">STA</text>
+  <path d="M96 320h96v24H96zm112 0h96v48h-96zm112-48h96v96h-96z" fill="#6366f1"/>
+  <circle cx="144" cy="332" r="16" fill="#818cf8"/>
+  <circle cx="256" cy="356" r="16" fill="#818cf8"/>
+  <circle cx="368" cy="308" r="16" fill="#818cf8"/>
+</svg>

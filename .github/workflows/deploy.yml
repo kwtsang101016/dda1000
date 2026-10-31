@@ -36,6 +36,7 @@ jobs:
             study_schemes/package-lock.json
             personality_type_test/package-lock.json
             studying_how/package-lock.json
+            study_planner/package-lock.json
 
       - name: Install and build calendar
         run: |
@@ -67,15 +68,21 @@ jobs:
           npm ci --prefix studying_how
           npm run build --prefix studying_how
 
+      - name: Install and build study_planner
+        run: |
+          npm ci --prefix study_planner
+          npm run build --prefix study_planner
+
       - name: Assemble site
         run: |
-          mkdir -p _site/calendar _site/what_and_why _site/academic_honesty _site/study_schemes _site/personality_type_test _site/studying_how
+          mkdir -p _site/calendar _site/what_and_why _site/academic_honesty _site/study_schemes _site/personality_type_test _site/studying_how _site/study_planner
           cp -r calendar/dist/* _site/calendar/
           cp -r what_and_why/dist/* _site/what_and_why/
           cp -r academic_honesty/dist/* _site/academic_honesty/
           cp -r study_schemes/dist/* _site/study_schemes/
           cp -r personality_type_test/dist/* _site/personality_type_test/
           cp -r studying_how/dist/* _site/studying_how/
+          cp -r study_planner/dist/* _site/study_planner/
           cp -r arrangement _site/arrangement
           cp site/index.html _site/index.html
           touch _site/.nojekyll

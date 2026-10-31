@@ -1,0 +1,61 @@
+.install-hint {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 300;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  background: var(--surface-elevated);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.install-hint__content strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--accent-bright);
+}
+
+.install-hint__content p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.install-hint__icon {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.install-hint__close {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.install-hint__close:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+@media (min-width: 640px) {
+  .install-hint {
+    left: auto;
+    max-width: 380px;
+  }
+}

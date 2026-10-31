@@ -1,0 +1,89 @@
+:root {
+  --ink: #14201f;
+  --ink-muted: #4a5c5a;
+  --paper: #f3efe6;
+  --paper-2: #e8e2d4;
+  --teal: #0a4d4a;
+  --teal-mid: #146864;
+  --teal-soft: #d5ebe8;
+  --copper: #b45a2a;
+  --copper-soft: #f3ddd0;
+  --ok: #1f6b4a;
+  --warn: #8a5a12;
+  --err: #8b2e2e;
+  --radius: 12px;
+  --shadow: 0 12px 40px rgba(20, 32, 31, 0.08);
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Source Sans 3", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* Aliases for older component CSS */
+  --bg: var(--paper);
+  --surface: rgba(255, 252, 245, 0.85);
+  --surface-elevated: #fffdf8;
+  --border: rgba(10, 77, 74, 0.14);
+  --text: var(--ink);
+  --text-muted: var(--ink-muted);
+  --accent: var(--teal);
+  --accent-bright: var(--teal-mid);
+  color: var(--ink);
+  background: var(--paper);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(20, 104, 100, 0.12), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(180, 90, 42, 0.08), transparent 50%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 23px,
+      rgba(20, 32, 31, 0.018) 24px
+    ),
+    var(--paper);
+}
+
+#app {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--teal);
+}
+
+p {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+a {
+  color: var(--teal-mid);
+}

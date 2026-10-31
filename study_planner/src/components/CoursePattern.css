@@ -1,0 +1,155 @@
+.section__head--row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.plan-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pattern-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pattern-year {
+  margin: 1.1rem 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--teal-mid);
+}
+
+.pattern-year:first-child {
+  margin-top: 0;
+}
+
+.pattern-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 52px;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  background: rgba(255, 252, 245, 0.72);
+  border: 1px solid rgba(10, 77, 74, 0.1);
+}
+
+.pattern-row--elective {
+  border-color: rgba(10, 77, 74, 0.28);
+  background: linear-gradient(
+    90deg,
+    rgba(213, 235, 232, 0.55),
+    rgba(255, 252, 245, 0.8)
+  );
+}
+
+.pattern-row__term {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+
+.pattern-tag {
+  display: inline-block;
+  margin-bottom: 0.45rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 6px;
+  background: var(--teal-soft);
+  color: var(--teal);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.course-card-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.course-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.55rem;
+  align-items: stretch;
+}
+
+.course-joiner {
+  align-self: center;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  font-style: italic;
+  padding: 0 0.15rem;
+}
+
+.pattern-placeholder {
+  color: var(--ink-muted);
+  font-style: italic;
+  font-size: 0.92rem;
+}
+
+.pattern-row__units {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.pattern-footnote {
+  margin-top: 1rem;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.free-slot-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.free-slot-remove {
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.free-add {
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .pattern-row {
+    grid-template-columns: 1fr;
+  }
+
+  .pattern-row__units {
+    text-align: left;
+  }
+}

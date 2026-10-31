@@ -14,11 +14,12 @@ Course homepage: <https://kwtsang101016.github.io/dda1000/>
 | [`academic_honesty/`](./academic_honesty/) | Slides: Academic Honesty | GitHub Pages `/dda1000/academic_honesty/` |
 | [`study_schemes/`](./study_schemes/) | Slides: SDS Study Schemes | GitHub Pages `/dda1000/study_schemes/` |
 | [`personality_type_test/`](./personality_type_test/) | Slides: Personality Type Test (pre-lesson task for 16 Oct) | GitHub Pages `/dda1000/personality_type_test/` |
+| [`study_planner/`](./study_planner/) | Interactive SDS study planner (CSE / DSBDT / STA / FE, 2026–27) | GitHub Pages `/dda1000/study_planner/` |
 | [`cat/`](./cat/) | Class Attending Table (live seating board for L12); its `/arrangement/` redirects to GitHub Pages | Render: <https://dda1000-cat.onrender.com/> |
 
 ## GitHub Pages
 
-`.github/workflows/deploy.yml` builds the calendar and the three slide decks on every push to `main` (changes that only touch `cat/` are skipped) and publishes them together with `site/index.html`. In the repository settings, **Pages → Source** must be set to **GitHub Actions**.
+`.github/workflows/deploy.yml` builds the calendar, slide decks, and study planner on every push to `main` (changes that only touch `cat/` are skipped) and publishes them together with `site/index.html`. In the repository settings, **Pages → Source** must be set to **GitHub Actions**.
 
 Local preview of one app:
 
@@ -27,7 +28,7 @@ npm install --prefix calendar
 npm run dev:cal
 ```
 
-(`dev:why`, `dev:honesty`, and `dev:schemes` start the slide decks.)
+(`dev:why`, `dev:honesty`, `dev:schemes`, and `dev:planner` start the other apps.)
 
 ## Adding a CAT attendance record to the calendar
 
