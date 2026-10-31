@@ -4,6 +4,8 @@ import {
   seedCatalogAssignments,
   type ManualAssignments,
   type PlanAssignments,
+  type SlotPlacements,
+  type TermPlacement,
 } from "./planSlots";
 import { buildFreeSlots, buildUcSlots } from "./planSlots";
 
@@ -14,6 +16,7 @@ export interface StoredState {
   feStream: FeStreamId | null;
   assignments: PlanAssignments;
   manual: ManualAssignments;
+  placements: SlotPlacements;
 }
 
 export interface PlanExportBundle {
@@ -24,6 +27,7 @@ export interface PlanExportBundle {
   feStream: FeStreamId | null;
   assignments: PlanAssignments;
   manual: ManualAssignments;
+  placements: SlotPlacements;
 }
 
 const MAJORS: MajorId[] = ["CSE", "DSBDT", "STA", "FE"];
@@ -34,6 +38,25 @@ function isMajor(v: unknown): v is MajorId {
 
 function isFe(v: unknown): v is FeStreamId {
   return v === "qf" || v === "fintech";
+}
+
+function parsePlacements(raw: unknown): SlotPlacements {
+  if (!raw || typeof raw !== "object") return {};
+  const out: SlotPlacements = {};
+  for (const [id, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (!value || typeof value !== "object") continue;
+    const year = (value as TermPlacement).year;
+    const term = (value as TermPlacement).term;
+    if (
+      typeof year === "number" &&
+      (term === 1 || term === 2) &&
+      year >= 1 &&
+      year <= 4
+    ) {
+      out[id] = { year, term };
+    }
+  }
+  return out;
 }
 
 export function loadSavedState(): StoredState {
@@ -55,7 +78,11 @@ export function loadSavedState(): StoredState {
       manual:
         parsed.manual && typeof parsed.manual === "object"
           ? parsed.manual
-          : emptyManualAssignments([...buildUcSlots(), ...(major ? buildFreeSlots(major) : [])]),
+          : emptyManualAssignments([
+              ...buildUcSlots(),
+              ...(major ? buildFreeSlots(major) : []),
+            ]),
+      placements: parsePlacements(parsed.placements),
     };
   } catch {
     return blankState();
@@ -63,7 +90,13 @@ export function loadSavedState(): StoredState {
 }
 
 function blankState(): StoredState {
-  return { major: null, feStream: null, assignments: {}, manual: {} };
+  return {
+    major: null,
+    feStream: null,
+    assignments: {},
+    manual: {},
+    placements: {},
+  };
 }
 
 export function savePlannerState(state: StoredState): void {
@@ -81,7 +114,9 @@ export function downloadPlanExport(state: StoredState): void {
     exportedAt: new Date().toISOString(),
     ...state,
   };
-  const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(bundle, null, 2)], {
+    type: "application/json",
+  });
   const stamp = new Date().toISOString().slice(0, 10);
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -116,7 +151,8 @@ export async function importPlanFromFile(file: File): Promise<StoredState> {
     obj.manual && typeof obj.manual === "object"
       ? (obj.manual as ManualAssignments)
       : {};
-  const state = { major, feStream, assignments, manual };
+  const placements = parsePlacements(obj.placements);
+  const state = { major, feStream, assignments, manual, placements };
   savePlannerState(state);
   return state;
 }

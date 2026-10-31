@@ -6,6 +6,7 @@ import {
   type ManualAssignments,
   type PlanAssignments,
   type PlanSlot,
+  type SlotPlacements,
 } from "../lib/planSlots";
 import { CourseInfoCard } from "./CourseInfoCard";
 import "./CoursePattern.css";
@@ -18,12 +19,16 @@ interface CoursePatternProps {
   freeSlots: PlanSlot[];
   assignments: PlanAssignments;
   manual: ManualAssignments;
+  placements: SlotPlacements;
   onSelectSlot: (slotId: string) => void;
   onExport: () => void;
   onImportFile: (file: File) => void;
   onReseed: () => void;
   onAddFreeSlot: () => void;
   onRemoveFreeSlot: (slotId: string) => void;
+  onPlaceUcInTerm: (year: number, term: 1 | 2) => void;
+  onPlaceFreeInTerm: (year: number, term: 1 | 2) => void;
+  onUnplaceSlot: (slotId: string) => void;
 }
 
 function groupMajorByTerm(slots: PlanSlot[]) {
@@ -61,23 +66,43 @@ export function CoursePattern({
   freeSlots,
   assignments,
   manual,
+  placements,
   onSelectSlot,
   onExport,
   onImportFile,
   onReseed,
   onAddFreeSlot,
   onRemoveFreeSlot,
+  onPlaceUcInTerm,
+  onPlaceFreeInTerm,
+  onUnplaceSlot,
 }: CoursePatternProps) {
   const groups = useMemo(() => groupMajorByTerm(majorSlots), [majorSlots]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const info = MAJORS[major];
 
-  function termUnits(termSlots: PlanSlot[]): number {
-    return termSlots.reduce((sum, slot) => {
+  const unplacedUc = ucSlots.filter((s) => !placements[s.id]);
+  const unplacedFree = freeSlots.filter((s) => !placements[s.id]);
+  const canPlaceUc = unplacedUc.length > 0;
+
+  function termUnits(
+    termSlots: PlanSlot[],
+    year: number,
+    term: 1 | 2,
+  ): number {
+    let sum = termSlots.reduce((acc, slot) => {
       const code = assignments[slot.id];
-      if (!code) return sum;
-      return sum + (getCourse(code)?.units ?? slot.units);
+      if (!code) return acc;
+      return acc + (getCourse(code)?.units ?? slot.units);
     }, 0);
+
+    for (const slot of [...ucSlots, ...freeSlots]) {
+      const p = placements[slot.id];
+      if (!p || p.year !== year || p.term !== term) continue;
+      const course = manual[slot.id];
+      sum += course?.units ?? 0;
+    }
+    return sum;
   }
 
   function manualLabel(slot: PlanSlot, course: ManualCourse | null | undefined) {
@@ -86,6 +111,42 @@ export function CoursePattern({
       return `Add ${slot.category ?? "University Core"}…`;
     }
     return "Add free elective…";
+  }
+
+  function renderManualSlot(slot: PlanSlot, inTerm: boolean) {
+    const course = manual[slot.id] ?? null;
+    return (
+      <div key={slot.id} className="free-slot-wrap">
+        <CourseInfoCard
+          manual={course}
+          fallbackRole={slot.category ?? slot.role}
+          selectable
+          emptyLabel={manualLabel(slot, course) ?? undefined}
+          onClick={() => onSelectSlot(slot.id)}
+        />
+        <div className="slot-actions">
+          {inTerm && (
+            <button
+              type="button"
+              className="free-slot-remove"
+              onClick={() => onUnplaceSlot(slot.id)}
+            >
+              Move out of term
+            </button>
+          )}
+          {slot.kind === "free" && freeSlots.length > 1 && !inTerm && (
+            <button
+              type="button"
+              className="free-slot-remove"
+              onClick={() => onRemoveFreeSlot(slot.id)}
+              aria-label="Remove free elective slot"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -99,8 +160,10 @@ export function CoursePattern({
             {major === "FE" && feStream
               ? ` (${feStream === "qf" ? "Quantitative Finance" : "FinTech"})`
               : ""}
-            . Every slot is clickable — replace catalogue courses or fill University
-            Core and Free Electives manually.
+            . Major rows start with scheme courses only — use{" "}
+            <strong>Add University Core</strong> or{" "}
+            <strong>Add free elective</strong> on a term to plan those courses
+            alongside them.
           </p>
         </div>
         <div className="plan-actions">
@@ -139,7 +202,11 @@ export function CoursePattern({
               ? `Year ${group.year}`
               : null;
           const hasElective = group.slots.some((s) => s.kind === "elective");
-          const units = termUnits(group.slots);
+          const units = termUnits(group.slots, group.year, group.term);
+          const termManual = [...ucSlots, ...freeSlots].filter((s) => {
+            const p = placements[s.id];
+            return p && p.year === group.year && p.term === group.term;
+          });
 
           return (
             <div key={group.key}>
@@ -169,6 +236,29 @@ export function CoursePattern({
                         />
                       );
                     })}
+                    {termManual.map((slot) => renderManualSlot(slot, true))}
+                  </div>
+                  <div className="term-add-row">
+                    <button
+                      type="button"
+                      className="btn btn--ghost term-add"
+                      disabled={!canPlaceUc}
+                      title={
+                        canPlaceUc
+                          ? "Place the next University Core slot in this term"
+                          : "All University Core slots are already placed in terms"
+                      }
+                      onClick={() => onPlaceUcInTerm(group.year, group.term)}
+                    >
+                      Add University Core
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost term-add"
+                      onClick={() => onPlaceFreeInTerm(group.year, group.term)}
+                    >
+                      Add free elective
+                    </button>
                   </div>
                 </div>
                 <div className="pattern-row__units">{units} u</div>
@@ -178,59 +268,46 @@ export function CoursePattern({
         })}
       </div>
 
-      <div className="pattern-year">University Core</div>
+      <div className="pattern-year">University Core (not yet in a term)</div>
       <div className="pattern-row">
         <div className="pattern-row__term">36 units</div>
         <div className="pattern-row__body">
-          <div className="course-card-grid">
-            {ucSlots.map((slot) => {
-              const course = manual[slot.id] ?? null;
-              return (
-                <CourseInfoCard
-                  key={slot.id}
-                  manual={course}
-                  fallbackRole={slot.category ?? slot.role}
-                  selectable
-                  emptyLabel={manualLabel(slot, course) ?? undefined}
-                  onClick={() => onSelectSlot(slot.id)}
-                />
-              );
-            })}
-          </div>
+          {unplacedUc.length === 0 ? (
+            <p className="pattern-placeholder">
+              All University Core slots are placed in year–term rows above. Use
+              “Move out of term” if you want one back here.
+            </p>
+          ) : (
+            <div className="course-card-grid">
+              {unplacedUc.map((slot) => renderManualSlot(slot, false))}
+            </div>
+          )}
+          <p className="pool-hint">
+            Tip: on any term, click <strong>Add University Core</strong> to park
+            one of these slots there (English, GE, PE, etc.), then fill in the
+            course.
+          </p>
         </div>
       </div>
 
-      <div className="pattern-year">Free Electives</div>
+      <div className="pattern-year">Free Electives (not yet in a term)</div>
       <div className="pattern-row">
         <div className="pattern-row__term">To 120</div>
         <div className="pattern-row__body">
-          <div className="course-card-grid">
-            {freeSlots.map((slot) => {
-              const course = manual[slot.id] ?? null;
-              return (
-                <div key={slot.id} className="free-slot-wrap">
-                  <CourseInfoCard
-                    manual={course}
-                    fallbackRole={slot.role}
-                    selectable
-                    emptyLabel={manualLabel(slot, course) ?? undefined}
-                    onClick={() => onSelectSlot(slot.id)}
-                  />
-                  {freeSlots.length > 1 && (
-                    <button
-                      type="button"
-                      className="free-slot-remove"
-                      onClick={() => onRemoveFreeSlot(slot.id)}
-                      aria-label="Remove free elective slot"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          <button type="button" className="btn btn--ghost free-add" onClick={onAddFreeSlot}>
+          {unplacedFree.length === 0 ? (
+            <p className="pattern-placeholder">
+              All free-elective slots are placed in year–term rows above.
+            </p>
+          ) : (
+            <div className="course-card-grid">
+              {unplacedFree.map((slot) => renderManualSlot(slot, false))}
+            </div>
+          )}
+          <button
+            type="button"
+            className="btn btn--ghost free-add"
+            onClick={onAddFreeSlot}
+          >
             Add free elective slot
           </button>
         </div>

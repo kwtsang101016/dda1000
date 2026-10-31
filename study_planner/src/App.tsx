@@ -18,6 +18,7 @@ import {
   type ManualAssignments,
   type PlanAssignments,
   type PlanSlot,
+  type SlotPlacements,
 } from "./lib/planSlots";
 import {
   downloadPlanExport,
@@ -40,11 +41,11 @@ export default function App() {
   const [feStream, setFeStream] = useState<FeStreamId | null>(saved.feStream);
   const [assignments, setAssignments] = useState<PlanAssignments>(saved.assignments);
   const [manual, setManual] = useState<ManualAssignments>(saved.manual);
+  const [placements, setPlacements] = useState<SlotPlacements>(saved.placements);
   const [freeExtra, setFreeExtra] = useState<PlanSlot[]>([]);
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
 
-  const ready =
-    major != null && (major !== "FE" || feStream != null);
+  const ready = major != null && (major !== "FE" || feStream != null);
 
   const majorSlots = useMemo(
     () => (ready && major ? buildMajorSlots(major, feStream) : []),
@@ -71,8 +72,8 @@ export default function App() {
   );
 
   useEffect(() => {
-    savePlannerState({ major, feStream, assignments, manual });
-  }, [major, feStream, assignments, manual]);
+    savePlannerState({ major, feStream, assignments, manual, placements });
+  }, [major, feStream, assignments, manual, placements]);
 
   function confirmReseed(): boolean {
     return window.confirm(
@@ -85,9 +86,7 @@ export default function App() {
       return;
     }
     const seed =
-      next === "FE" && !nextFe
-        ? {}
-        : seedCatalogAssignments(next, nextFe);
+      next === "FE" && !nextFe ? {} : seedCatalogAssignments(next, nextFe);
     setMajor(next);
     setFeStream(nextFe);
     setAssignments(seed);
@@ -96,7 +95,6 @@ export default function App() {
         ...buildUcSlots(),
         ...buildFreeSlots(next),
       ]);
-      // Keep previous UC / free manual entries by id when present.
       const merged: ManualAssignments = { ...ucFree };
       for (const [id, course] of Object.entries(prev)) {
         if (id.startsWith("uc-") || id.startsWith("free-")) {
@@ -104,6 +102,20 @@ export default function App() {
         }
       }
       return merged;
+    });
+    setPlacements((prev) => {
+      const nextIds = new Set([
+        ...buildUcSlots().map((s) => s.id),
+        ...buildFreeSlots(next).map((s) => s.id),
+        ...Object.keys(prev).filter((id) => id.startsWith("free-extra-")),
+      ]);
+      const kept: SlotPlacements = {};
+      for (const [id, place] of Object.entries(prev)) {
+        if (nextIds.has(id) || id.startsWith("uc-") || id.startsWith("free-")) {
+          kept[id] = place;
+        }
+      }
+      return kept;
     });
     setFreeExtra([]);
     setActiveSlotId(null);
@@ -135,7 +147,7 @@ export default function App() {
   }
 
   function handleExport() {
-    downloadPlanExport({ major, feStream, assignments, manual });
+    downloadPlanExport({ major, feStream, assignments, manual, placements });
   }
 
   async function handleImport(file: File) {
@@ -152,6 +164,7 @@ export default function App() {
       setFeStream(imported.feStream);
       setAssignments(imported.assignments);
       setManual(imported.manual);
+      setPlacements(imported.placements);
       setFreeExtra([]);
       setActiveSlotId(null);
     } catch (err) {
@@ -184,14 +197,12 @@ export default function App() {
   }
 
   function handleAddFreeSlot() {
-    const n = freeSlots.length + 1;
     const id = `free-extra-${Date.now()}`;
     setFreeExtra((prev) => [
       ...prev,
       { id, kind: "free", role: "Free elective", units: 3 },
     ]);
     setManual((prev) => ({ ...prev, [id]: null }));
-    void n;
   }
 
   function handleRemoveFreeSlot(slotId: string) {
@@ -203,7 +214,46 @@ export default function App() {
       next[slotId] = null;
       return next;
     });
+    setPlacements((prev) => {
+      if (!(slotId in prev)) return prev;
+      const next = { ...prev };
+      delete next[slotId];
+      return next;
+    });
     if (activeSlotId === slotId) setActiveSlotId(null);
+  }
+
+  function handlePlaceUcInTerm(year: number, term: 1 | 2) {
+    const nextSlot = ucSlots.find((s) => !placements[s.id]);
+    if (!nextSlot) return;
+    setPlacements((prev) => ({ ...prev, [nextSlot.id]: { year, term } }));
+    setActiveSlotId(nextSlot.id);
+  }
+
+  function handlePlaceFreeInTerm(year: number, term: 1 | 2) {
+    const existing = freeSlots.find((s) => !placements[s.id]);
+    if (existing) {
+      setPlacements((prev) => ({ ...prev, [existing.id]: { year, term } }));
+      setActiveSlotId(existing.id);
+      return;
+    }
+    const id = `free-extra-${Date.now()}`;
+    setFreeExtra((prev) => [
+      ...prev,
+      { id, kind: "free", role: "Free elective", units: 3 },
+    ]);
+    setManual((prev) => ({ ...prev, [id]: null }));
+    setPlacements((prev) => ({ ...prev, [id]: { year, term } }));
+    setActiveSlotId(id);
+  }
+
+  function handleUnplaceSlot(slotId: string) {
+    setPlacements((prev) => {
+      if (!(slotId in prev)) return prev;
+      const next = { ...prev };
+      delete next[slotId];
+      return next;
+    });
   }
 
   const majorLabel = major ? MAJORS[major].label : null;
@@ -217,8 +267,8 @@ export default function App() {
           <h1 className="hero__title">Build your 2026–27 study plan</h1>
           <p className="hero__lead">
             Choose CSE, DSBDT, STA, or FE, seed the official recommended pattern,
-            then edit every slot. University Core and Free Electives fill the path
-            to 120 units.
+            then edit every slot. Add University Core and Free Electives into any
+            term on the path to 120 units.
           </p>
           <p className="hero__meta">
             {majorLabel
@@ -265,12 +315,16 @@ export default function App() {
               freeSlots={freeSlots}
               assignments={assignments}
               manual={manual}
+              placements={placements}
               onSelectSlot={setActiveSlotId}
               onExport={handleExport}
               onImportFile={handleImport}
               onReseed={handleReseed}
               onAddFreeSlot={handleAddFreeSlot}
               onRemoveFreeSlot={handleRemoveFreeSlot}
+              onPlaceUcInTerm={handlePlaceUcInTerm}
+              onPlaceFreeInTerm={handlePlaceFreeInTerm}
+              onUnplaceSlot={handleUnplaceSlot}
             />
           </>
         )}

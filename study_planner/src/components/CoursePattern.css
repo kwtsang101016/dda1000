@@ -144,6 +144,37 @@
   margin-top: 0.75rem;
 }
 
+.term-add-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.term-add {
+  font-size: 0.88rem;
+  padding: 0.4rem 0.85rem;
+}
+
+.term-add:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.slot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.pool-hint {
+  margin: 0.85rem 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  max-width: 40rem;
+}
+
 @media (max-width: 640px) {
   .pattern-row {
     grid-template-columns: 1fr;

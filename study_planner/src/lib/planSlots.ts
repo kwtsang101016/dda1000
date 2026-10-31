@@ -26,6 +26,24 @@ export interface PlanSlot {
 export type PlanAssignments = Record<string, string | null>;
 export type ManualAssignments = Record<string, ManualCourse | null>;
 
+/** Where a University Core / Free Elective slot sits in the year–term timeline. */
+export type TermPlacement = { year: number; term: 1 | 2 };
+export type SlotPlacements = Record<string, TermPlacement>;
+
+export function termLabelFor(term: 1 | 2): string {
+  return term === 1 ? "1st term" : "2nd term";
+}
+
+export function isPlacedInTerm(
+  placements: SlotPlacements,
+  slotId: string,
+  year: number,
+  term: 1 | 2,
+): boolean {
+  const p = placements[slotId];
+  return Boolean(p && p.year === year && p.term === term);
+}
+
 export function buildMajorSlots(major: MajorId, feStream?: FeStreamId | null): PlanSlot[] {
   const pattern = getPattern(major, feStream);
   const slots: PlanSlot[] = [];
