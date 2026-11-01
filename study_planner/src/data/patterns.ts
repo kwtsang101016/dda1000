@@ -18,9 +18,10 @@ function row(
 }
 
 const CSE: PatternRow[] = [
-  row(1, 1, "school-package", [["CSC1003"], ["DDA1000"], ["MAT1001", "MAT1011"]]),
+  // Note [b]: Option B (CSC1003/1004) seeded; Option A is CSC1001/1002 (take as a pair).
+  row(1, 1, "school-package", [["CSC1003", "CSC1001"], ["DDA1000"], ["MAT1001", "MAT1011"]]),
   row(1, 2, "school-package", [
-    ["CSC1004"],
+    ["CSC1004", "CSC1002"],
     ["DDA2001"],
     ["MAT1002", "MAT1012"],
     ["MAT2041", "MAT2041A"],

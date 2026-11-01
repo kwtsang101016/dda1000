@@ -9,7 +9,7 @@ import { Notes } from "./components/Notes";
 import { RequirementsSummary } from "./components/RequirementsSummary";
 import { UcCategoryPicker } from "./components/UcCategoryPicker";
 import { FE_STREAM_LABELS, MAJORS } from "./data/majors";
-import type { FeStreamId, MajorId, ManualCourse } from "./data/types";
+import type { FeStreamId, MajorId, ManualCourse, StreamTag } from "./data/types";
 import {
   buildFreeSlots,
   buildMajorSlots,
@@ -48,6 +48,9 @@ export default function App() {
   const [manual, setManual] = useState<ManualAssignments>(saved.manual);
   const [placements, setPlacements] = useState<SlotPlacements>(saved.placements);
   const [summerYears, setSummerYears] = useState<number[]>(saved.summerYears);
+  const [claimedStream, setClaimedStream] = useState<StreamTag | null>(
+    saved.claimedStream,
+  );
   const [freeExtra, setFreeExtra] = useState<PlanSlot[]>([]);
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [movingSlotId, setMovingSlotId] = useState<string | null>(null);
@@ -92,8 +95,9 @@ export default function App() {
       manual,
       placements,
       summerYears,
+      claimedStream,
     });
-  }, [major, feStream, assignments, manual, placements, summerYears]);
+  }, [major, feStream, assignments, manual, placements, summerYears, claimedStream]);
 
   function confirmReseed(): boolean {
     return window.confirm(
@@ -133,6 +137,7 @@ export default function App() {
       return kept;
     });
     setFreeExtra([]);
+    setClaimedStream(null);
     setActiveSlotId(null);
     setMovingSlotId(null);
   }
@@ -178,6 +183,7 @@ export default function App() {
       manual,
       placements,
       summerYears,
+      claimedStream,
     });
   }
 
@@ -197,6 +203,7 @@ export default function App() {
       setManual(imported.manual);
       setPlacements(imported.placements);
       setSummerYears(imported.summerYears);
+      setClaimedStream(imported.claimedStream);
       setFreeExtra([]);
       setActiveSlotId(null);
       setMovingSlotId(null);
@@ -385,6 +392,8 @@ export default function App() {
                 .filter((s) => !placements[s.id])
                 .map((s) => s.category ?? "University Core")}
               remainingFreeSlots={freeSlots.filter((s) => !placements[s.id]).length}
+              claimedStream={claimedStream}
+              onClaimedStreamChange={setClaimedStream}
             />
             <CoursePattern
               major={major}

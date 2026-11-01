@@ -1,4 +1,5 @@
-import type { FeStreamId, MajorId, ManualCourse } from "../data/types";
+import type { FeStreamId, MajorId, ManualCourse, StreamTag } from "../data/types";
+import { STREAM_LABELS } from "../data/streams";
 import {
   emptyManualAssignments,
   seedCatalogAssignments,
@@ -19,6 +20,7 @@ export interface StoredState {
   manual: ManualAssignments;
   placements: SlotPlacements;
   summerYears: number[];
+  claimedStream: StreamTag | null;
 }
 
 export interface PlanExportBundle {
@@ -31,6 +33,7 @@ export interface PlanExportBundle {
   manual: ManualAssignments;
   placements: SlotPlacements;
   summerYears: number[];
+  claimedStream: StreamTag | null;
 }
 
 const MAJORS: MajorId[] = ["CSE", "DSBDT", "STA", "FE"];
@@ -72,6 +75,11 @@ function parseSummerYears(raw: unknown): number[] {
   ].sort((a, b) => a - b);
 }
 
+function parseClaimedStream(raw: unknown): StreamTag | null {
+  if (typeof raw !== "string") return null;
+  return raw in STREAM_LABELS ? (raw as StreamTag) : null;
+}
+
 export function loadSavedState(): StoredState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -97,6 +105,7 @@ export function loadSavedState(): StoredState {
             ]),
       placements: parsePlacements(parsed.placements),
       summerYears: parseSummerYears(parsed.summerYears),
+      claimedStream: parseClaimedStream(parsed.claimedStream),
     };
   } catch {
     return blankState();
@@ -111,6 +120,7 @@ function blankState(): StoredState {
     manual: {},
     placements: {},
     summerYears: [],
+    claimedStream: null,
   };
 }
 
@@ -168,7 +178,16 @@ export async function importPlanFromFile(file: File): Promise<StoredState> {
       : {};
   const placements = parsePlacements(obj.placements);
   const summerYears = parseSummerYears(obj.summerYears);
-  const state = { major, feStream, assignments, manual, placements, summerYears };
+  const claimedStream = parseClaimedStream(obj.claimedStream);
+  const state = {
+    major,
+    feStream,
+    assignments,
+    manual,
+    placements,
+    summerYears,
+    claimedStream,
+  };
   savePlannerState(state);
   return state;
 }
