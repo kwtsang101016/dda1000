@@ -6,6 +6,7 @@ import { MajorSelector } from "./components/MajorSelector";
 import { ManualCourseForm } from "./components/ManualCourseForm";
 import { Notes } from "./components/Notes";
 import { RequirementsSummary } from "./components/RequirementsSummary";
+import { UcCategoryPicker } from "./components/UcCategoryPicker";
 import { FE_STREAM_LABELS, MAJORS } from "./data/majors";
 import type { FeStreamId, MajorId, ManualCourse } from "./data/types";
 import {
@@ -44,6 +45,10 @@ export default function App() {
   const [placements, setPlacements] = useState<SlotPlacements>(saved.placements);
   const [freeExtra, setFreeExtra] = useState<PlanSlot[]>([]);
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
+  const [ucPlaceTarget, setUcPlaceTarget] = useState<{
+    year: number;
+    term: 1 | 2;
+  } | null>(null);
 
   const ready = major != null && (major !== "FE" || feStream != null);
 
@@ -223,11 +228,16 @@ export default function App() {
     if (activeSlotId === slotId) setActiveSlotId(null);
   }
 
-  function handlePlaceUcInTerm(year: number, term: 1 | 2) {
-    const nextSlot = ucSlots.find((s) => !placements[s.id]);
-    if (!nextSlot) return;
-    setPlacements((prev) => ({ ...prev, [nextSlot.id]: { year, term } }));
-    setActiveSlotId(nextSlot.id);
+  function handleRequestPlaceUc(year: number, term: 1 | 2) {
+    setUcPlaceTarget({ year, term });
+  }
+
+  function handleConfirmPlaceUc(slotId: string) {
+    if (!ucPlaceTarget) return;
+    const { year, term } = ucPlaceTarget;
+    setPlacements((prev) => ({ ...prev, [slotId]: { year, term } }));
+    setUcPlaceTarget(null);
+    setActiveSlotId(slotId);
   }
 
   function handlePlaceFreeInTerm(year: number, term: 1 | 2) {
@@ -322,7 +332,7 @@ export default function App() {
               onReseed={handleReseed}
               onAddFreeSlot={handleAddFreeSlot}
               onRemoveFreeSlot={handleRemoveFreeSlot}
-              onPlaceUcInTerm={handlePlaceUcInTerm}
+              onRequestPlaceUc={handleRequestPlaceUc}
               onPlaceFreeInTerm={handlePlaceFreeInTerm}
               onUnplaceSlot={handleUnplaceSlot}
             />
@@ -367,6 +377,16 @@ export default function App() {
           onSave={handleManualSave}
           onClear={handleManualClear}
           onClose={() => setActiveSlotId(null)}
+        />
+      )}
+
+      {ucPlaceTarget && (
+        <UcCategoryPicker
+          year={ucPlaceTarget.year}
+          term={ucPlaceTarget.term}
+          options={ucSlots.filter((s) => !placements[s.id])}
+          onPick={handleConfirmPlaceUc}
+          onClose={() => setUcPlaceTarget(null)}
         />
       )}
     </div>

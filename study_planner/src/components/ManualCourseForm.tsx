@@ -53,8 +53,9 @@ export function ManualCourseForm({ slot, current, onSave, onClear, onClose }: Pr
               {slot.kind === "uc" ? "University Core course" : "Free elective"}
             </h2>
             <p>
-              {slot.category ? `${slot.category} · ` : ""}
-              Default {slot.units} units — enter any course code and title.
+              {slot.kind === "uc" && slot.category
+                ? `This slot counts toward the ${slot.category} University Core requirement (${slot.units}u). Enter the course you will take.`
+                : `Default ${slot.units} units — enter any course code and title.`}
             </p>
           </div>
           <div className="picker__head-actions">

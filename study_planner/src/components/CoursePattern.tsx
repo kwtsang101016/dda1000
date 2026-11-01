@@ -26,7 +26,7 @@ interface CoursePatternProps {
   onReseed: () => void;
   onAddFreeSlot: () => void;
   onRemoveFreeSlot: (slotId: string) => void;
-  onPlaceUcInTerm: (year: number, term: 1 | 2) => void;
+  onRequestPlaceUc: (year: number, term: 1 | 2) => void;
   onPlaceFreeInTerm: (year: number, term: 1 | 2) => void;
   onUnplaceSlot: (slotId: string) => void;
 }
@@ -73,7 +73,7 @@ export function CoursePattern({
   onReseed,
   onAddFreeSlot,
   onRemoveFreeSlot,
-  onPlaceUcInTerm,
+  onRequestPlaceUc,
   onPlaceFreeInTerm,
   onUnplaceSlot,
 }: CoursePatternProps) {
@@ -105,10 +105,16 @@ export function CoursePattern({
     return sum;
   }
 
+  function ucRequirementLabel(slot: PlanSlot): string {
+    return slot.category
+      ? `UC requirement · ${slot.category}`
+      : "University Core";
+  }
+
   function manualLabel(slot: PlanSlot, course: ManualCourse | null | undefined) {
     if (course) return null;
     if (slot.kind === "uc") {
-      return `Add ${slot.category ?? "University Core"}…`;
+      return `Fill ${ucRequirementLabel(slot)}…`;
     }
     return "Add free elective…";
   }
@@ -119,7 +125,9 @@ export function CoursePattern({
       <div key={slot.id} className="free-slot-wrap">
         <CourseInfoCard
           manual={course}
-          fallbackRole={slot.category ?? slot.role}
+          fallbackRole={
+            slot.kind === "uc" ? ucRequirementLabel(slot) : (slot.category ?? slot.role)
+          }
           selectable
           emptyLabel={manualLabel(slot, course) ?? undefined}
           onClick={() => onSelectSlot(slot.id)}
@@ -245,10 +253,10 @@ export function CoursePattern({
                       disabled={!canPlaceUc}
                       title={
                         canPlaceUc
-                          ? "Place the next University Core slot in this term"
+                          ? "Choose a University Core requirement to place in this term"
                           : "All University Core slots are already placed in terms"
                       }
-                      onClick={() => onPlaceUcInTerm(group.year, group.term)}
+                      onClick={() => onRequestPlaceUc(group.year, group.term)}
                     >
                       Add University Core
                     </button>
