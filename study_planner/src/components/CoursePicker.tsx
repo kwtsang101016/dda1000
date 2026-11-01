@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ROLE_LABELS, STREAM_COLORS, STREAM_LABELS, STREAMS_BY_MAJOR } from "../data/streams";
 import type { MajorId, RoleTag, StreamTag } from "../data/types";
 import {
-  conflictsWithTaken,
+  courseFamilyKey,
   filterCatalogue,
   getCourse,
   rolesForMajor,
@@ -46,24 +46,35 @@ export function CoursePicker({
   const streamOptions = STREAMS_BY_MAJOR[major];
 
   const options = useMemo(() => {
-    // Seeded "or" group: show those first when no filters/query, but still allow full catalogue.
+    // Hide letter-suffix variants already used in other slots (STA2001 vs STA2001H, MAT2041 vs MAT2041A).
     const filtered = filterCatalogue({
       major,
       roles: roles.length ? roles : undefined,
       streams: streams.length ? streams : undefined,
       query,
+      taken,
+      allowCode: currentCode,
     });
 
     if (seededOptions && !query && roles.length <= 1 && streams.length === 0) {
       const preferred = (slot.options ?? [])
         .map((code) => getCourse(code))
-        .filter((c): c is NonNullable<typeof c> => Boolean(c));
+        .filter((c): c is NonNullable<typeof c> => Boolean(c))
+        .filter((c) => {
+          if (c.code === currentCode) return true;
+          if (taken.has(c.code)) return false;
+          const family = courseFamilyKey(c.code);
+          for (const t of taken) {
+            if (t !== currentCode && courseFamilyKey(t) === family) return false;
+          }
+          return true;
+        });
       const preferredCodes = new Set(preferred.map((c) => c.code));
       const rest = filtered.filter((c) => !preferredCodes.has(c.code));
       return [...preferred, ...rest];
     }
     return filtered;
-  }, [major, roles, streams, query, seededOptions, slot.options]);
+  }, [major, roles, streams, query, seededOptions, slot.options, taken, currentCode]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -179,16 +190,13 @@ export function CoursePicker({
             </li>
           )}
           {options.map((c) => {
-            const blocked =
-              conflictsWithTaken(c.code, taken) && c.code !== currentCode;
-            const roles = rolesForMajor(c, major);
-            const streams = streamsForMajor(c, major);
+            const roleTags = rolesForMajor(c, major);
+            const streamTags = streamsForMajor(c, major);
             return (
               <li key={c.code}>
                 <button
                   type="button"
                   className={`picker__item${c.code === currentCode ? " picker__item--current" : ""}`}
-                  disabled={blocked}
                   onClick={() => onPick(c.code)}
                 >
                   <span className="picker__code">{c.code}</span>
@@ -196,13 +204,13 @@ export function CoursePicker({
                     <span className="picker__title">{c.title}</span>
                     <span className="picker__sub">
                       {c.units}u
-                      {roles.length
-                        ? ` · ${roles.map((r) => ROLE_LABELS[r]).join(", ")}`
+                      {roleTags.length
+                        ? ` · ${roleTags.map((r) => ROLE_LABELS[r]).join(", ")}`
                         : ""}
-                      {streams.length
-                        ? ` · ${streams.map((s) => STREAM_LABELS[s]).join(", ")}`
+                      {streamTags.length
+                        ? ` · ${streamTags.map((s) => STREAM_LABELS[s]).join(", ")}`
                         : ""}
-                      {blocked ? " · already taken" : ""}
+                      {c.statusNote ? ` · ${c.statusNote}` : ""}
                     </span>
                   </span>
                 </button>

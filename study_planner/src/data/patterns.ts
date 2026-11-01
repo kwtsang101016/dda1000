@@ -69,9 +69,13 @@ const STA: PatternRow[] = [
     ["MAT1002", "MAT1012"],
     ["MAT2041", "MAT2041A"],
   ]),
-  row(2, 1, "school-package", [["PHY1001"], ["STA2001H"]]),
+  // Notes [c]/[d]: STA2001/STA2002 allowed; STA2001H/STA2002H recommended (seeded first).
+  row(2, 1, "school-package", [["PHY1001"], ["STA2001H", "STA2001"]]),
   row(2, 1, "major-required", [["MAT2050"]]),
-  row(2, 2, "major-required", [["MAT3007", "MAT3007H"], ["STA2002H"]]),
+  row(2, 2, "major-required", [
+    ["MAT3007", "MAT3007H"],
+    ["STA2002H", "STA2002"],
+  ]),
   row(2, 2, "major-elective", [], 1),
   row(3, 1, "major-required", [["STA3042"]]),
   row(3, 1, "major-elective", [], 2),
