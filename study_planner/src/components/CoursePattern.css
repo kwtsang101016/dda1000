@@ -175,6 +175,25 @@
   max-width: 40rem;
 }
 
+.summer-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.summer-toolbar__label {
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  margin-right: 0.25rem;
+}
+
+.pattern-row--summer {
+  border-color: rgba(180, 90, 42, 0.28);
+  background: rgba(180, 90, 42, 0.04);
+}
+
 @media (max-width: 640px) {
   .pattern-row {
     grid-template-columns: 1fr;

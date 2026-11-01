@@ -5,6 +5,7 @@ import {
   type ManualAssignments,
   type PlanAssignments,
   type SlotPlacements,
+  type TermKind,
   type TermPlacement,
 } from "./planSlots";
 import { buildFreeSlots, buildUcSlots } from "./planSlots";
@@ -17,6 +18,7 @@ export interface StoredState {
   assignments: PlanAssignments;
   manual: ManualAssignments;
   placements: SlotPlacements;
+  summerYears: number[];
 }
 
 export interface PlanExportBundle {
@@ -28,6 +30,7 @@ export interface PlanExportBundle {
   assignments: PlanAssignments;
   manual: ManualAssignments;
   placements: SlotPlacements;
+  summerYears: number[];
 }
 
 const MAJORS: MajorId[] = ["CSE", "DSBDT", "STA", "FE"];
@@ -40,6 +43,10 @@ function isFe(v: unknown): v is FeStreamId {
   return v === "qf" || v === "fintech";
 }
 
+function isTermKind(v: unknown): v is TermKind {
+  return v === 1 || v === 2 || v === "summer";
+}
+
 function parsePlacements(raw: unknown): SlotPlacements {
   if (!raw || typeof raw !== "object") return {};
   const out: SlotPlacements = {};
@@ -47,16 +54,22 @@ function parsePlacements(raw: unknown): SlotPlacements {
     if (!value || typeof value !== "object") continue;
     const year = (value as TermPlacement).year;
     const term = (value as TermPlacement).term;
-    if (
-      typeof year === "number" &&
-      (term === 1 || term === 2) &&
-      year >= 1 &&
-      year <= 4
-    ) {
+    if (typeof year === "number" && isTermKind(term) && year >= 1 && year <= 4) {
       out[id] = { year, term };
     }
   }
   return out;
+}
+
+function parseSummerYears(raw: unknown): number[] {
+  if (!Array.isArray(raw)) return [];
+  return [
+    ...new Set(
+      raw.filter(
+        (y): y is number => typeof y === "number" && y >= 1 && y <= 4,
+      ),
+    ),
+  ].sort((a, b) => a - b);
 }
 
 export function loadSavedState(): StoredState {
@@ -83,6 +96,7 @@ export function loadSavedState(): StoredState {
               ...(major ? buildFreeSlots(major) : []),
             ]),
       placements: parsePlacements(parsed.placements),
+      summerYears: parseSummerYears(parsed.summerYears),
     };
   } catch {
     return blankState();
@@ -96,6 +110,7 @@ function blankState(): StoredState {
     assignments: {},
     manual: {},
     placements: {},
+    summerYears: [],
   };
 }
 
@@ -152,7 +167,8 @@ export async function importPlanFromFile(file: File): Promise<StoredState> {
       ? (obj.manual as ManualAssignments)
       : {};
   const placements = parsePlacements(obj.placements);
-  const state = { major, feStream, assignments, manual, placements };
+  const summerYears = parseSummerYears(obj.summerYears);
+  const state = { major, feStream, assignments, manual, placements, summerYears };
   savePlannerState(state);
   return state;
 }

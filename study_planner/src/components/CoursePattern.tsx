@@ -3,10 +3,12 @@ import { MAJORS } from "../data/majors";
 import type { FeStreamId, MajorId, ManualCourse } from "../data/types";
 import { getCourse } from "../lib/courseUtils";
 import {
+  buildTermGroups,
   type ManualAssignments,
   type PlanAssignments,
   type PlanSlot,
   type SlotPlacements,
+  type TermKind,
 } from "../lib/planSlots";
 import { CourseInfoCard } from "./CourseInfoCard";
 import "./CoursePattern.css";
@@ -20,42 +22,19 @@ interface CoursePatternProps {
   assignments: PlanAssignments;
   manual: ManualAssignments;
   placements: SlotPlacements;
+  summerYears: number[];
   onSelectSlot: (slotId: string) => void;
+  onRequestMove: (slotId: string) => void;
   onExport: () => void;
   onImportFile: (file: File) => void;
   onReseed: () => void;
   onAddFreeSlot: () => void;
   onRemoveFreeSlot: (slotId: string) => void;
-  onRequestPlaceUc: (year: number, term: 1 | 2) => void;
-  onPlaceFreeInTerm: (year: number, term: 1 | 2) => void;
+  onRequestPlaceUc: (year: number, term: TermKind) => void;
+  onPlaceFreeInTerm: (year: number, term: TermKind) => void;
   onUnplaceSlot: (slotId: string) => void;
-}
-
-function groupMajorByTerm(slots: PlanSlot[]) {
-  const groups: {
-    key: string;
-    year: number;
-    term: 1 | 2;
-    label: string;
-    slots: PlanSlot[];
-  }[] = [];
-  for (const slot of slots) {
-    if (slot.year == null || slot.term == null) continue;
-    const key = `${slot.year}-${slot.term}`;
-    let group = groups.find((g) => g.key === key);
-    if (!group) {
-      group = {
-        key,
-        year: slot.year,
-        term: slot.term,
-        label: slot.termLabel ?? "",
-        slots: [],
-      };
-      groups.push(group);
-    }
-    group.slots.push(slot);
-  }
-  return groups;
+  onAddSummer: (year: number) => void;
+  onRemoveSummer: (year: number) => void;
 }
 
 export function CoursePattern({
@@ -67,7 +46,9 @@ export function CoursePattern({
   assignments,
   manual,
   placements,
+  summerYears,
   onSelectSlot,
+  onRequestMove,
   onExport,
   onImportFile,
   onReseed,
@@ -76,8 +57,14 @@ export function CoursePattern({
   onRequestPlaceUc,
   onPlaceFreeInTerm,
   onUnplaceSlot,
+  onAddSummer,
+  onRemoveSummer,
 }: CoursePatternProps) {
-  const groups = useMemo(() => groupMajorByTerm(majorSlots), [majorSlots]);
+  const manualPool = useMemo(() => [...ucSlots, ...freeSlots], [ucSlots, freeSlots]);
+  const groups = useMemo(
+    () => buildTermGroups(majorSlots, manualPool, placements, summerYears),
+    [majorSlots, manualPool, placements, summerYears],
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const info = MAJORS[major];
 
@@ -85,22 +72,25 @@ export function CoursePattern({
   const unplacedFree = freeSlots.filter((s) => !placements[s.id]);
   const canPlaceUc = unplacedUc.length > 0;
 
-  function termUnits(
-    termSlots: PlanSlot[],
-    year: number,
-    term: 1 | 2,
-  ): number {
-    let sum = termSlots.reduce((acc, slot) => {
+  const yearsInPlan = useMemo(() => {
+    const set = new Set<number>([1, 2, 3, 4]);
+    for (const g of groups) set.add(g.year);
+    return [...set].sort((a, b) => a - b);
+  }, [groups]);
+
+  function termUnits(group: {
+    year: number;
+    term: TermKind;
+    majorSlots: PlanSlot[];
+    manualSlots: PlanSlot[];
+  }): number {
+    let sum = group.majorSlots.reduce((acc, slot) => {
       const code = assignments[slot.id];
       if (!code) return acc;
       return acc + (getCourse(code)?.units ?? slot.units);
     }, 0);
-
-    for (const slot of [...ucSlots, ...freeSlots]) {
-      const p = placements[slot.id];
-      if (!p || p.year !== year || p.term !== term) continue;
-      const course = manual[slot.id];
-      sum += course?.units ?? 0;
+    for (const slot of group.manualSlots) {
+      sum += manual[slot.id]?.units ?? 0;
     }
     return sum;
   }
@@ -134,13 +124,22 @@ export function CoursePattern({
         />
         <div className="slot-actions">
           {inTerm && (
-            <button
-              type="button"
-              className="free-slot-remove"
-              onClick={() => onUnplaceSlot(slot.id)}
-            >
-              Move out of term
-            </button>
+            <>
+              <button
+                type="button"
+                className="free-slot-remove"
+                onClick={() => onRequestMove(slot.id)}
+              >
+                Move
+              </button>
+              <button
+                type="button"
+                className="free-slot-remove"
+                onClick={() => onUnplaceSlot(slot.id)}
+              >
+                Move out of term
+              </button>
+            </>
           )}
           {slot.kind === "free" && freeSlots.length > 1 && !inTerm && (
             <button
@@ -157,6 +156,35 @@ export function CoursePattern({
     );
   }
 
+  function renderMajorSlot(slot: PlanSlot) {
+    const code = assignments[slot.id] ?? null;
+    return (
+      <div key={slot.id} className="free-slot-wrap">
+        <CourseInfoCard
+          code={code}
+          major={major}
+          fallbackRole={slot.role}
+          selectable
+          emptyLabel={
+            slot.options && slot.options.length > 1
+              ? `Choose: ${slot.options.join(" or ")}`
+              : "Click to choose elective…"
+          }
+          onClick={() => onSelectSlot(slot.id)}
+        />
+        <div className="slot-actions">
+          <button
+            type="button"
+            className="free-slot-remove"
+            onClick={() => onRequestMove(slot.id)}
+          >
+            Move
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <section className="section plan-board" id="pattern">
       <div className="section__head section__head--row">
@@ -168,10 +196,9 @@ export function CoursePattern({
             {major === "FE" && feStream
               ? ` (${feStream === "qf" ? "Quantitative Finance" : "FinTech"})`
               : ""}
-            . Major rows start with scheme courses only — use{" "}
-            <strong>Add University Core</strong> or{" "}
-            <strong>Add free elective</strong> on a term to plan those courses
-            alongside them.
+            . Use <strong>Move</strong> to shift a course to another term (including
+            Summer) without re-searching. Summer terms are optional — add one only
+            if you plan to take courses then.
           </p>
         </div>
         <div className="plan-actions">
@@ -203,60 +230,65 @@ export function CoursePattern({
         </div>
       </div>
 
+      <div className="summer-toolbar">
+        <span className="summer-toolbar__label">Optional Summer:</span>
+        {yearsInPlan.map((year) => {
+          const has = summerYears.includes(year);
+          return (
+            <button
+              key={year}
+              type="button"
+              className="btn btn--ghost term-add"
+              onClick={() => (has ? onRemoveSummer(year) : onAddSummer(year))}
+              title={
+                has
+                  ? "Remove Summer for this year (only if empty)"
+                  : "Show a Summer row for this year"
+              }
+            >
+              {has ? `Remove Y${year} Summer` : `Add Y${year} Summer`}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="pattern-timeline">
         {groups.map((group, index) => {
           const yearLabel =
             index === 0 || groups[index - 1]?.year !== group.year
               ? `Year ${group.year}`
               : null;
-          const hasElective = group.slots.some((s) => s.kind === "elective");
-          const units = termUnits(group.slots, group.year, group.term);
-          const termManual = [...ucSlots, ...freeSlots].filter((s) => {
-            const p = placements[s.id];
-            return p && p.year === group.year && p.term === group.term;
-          });
+          const hasElective = group.majorSlots.some((s) => s.kind === "elective");
+          const units = termUnits(group);
+          const isSummer = group.term === "summer";
 
           return (
             <div key={group.key}>
               {yearLabel && <div className="pattern-year">{yearLabel}</div>}
               <div
-                className={`pattern-row${hasElective ? " pattern-row--elective" : ""}`}
+                className={`pattern-row${hasElective ? " pattern-row--elective" : ""}${
+                  isSummer ? " pattern-row--summer" : ""
+                }`}
               >
                 <div className="pattern-row__term">
-                  Term {group.term} · {group.label}
+                  {isSummer ? "Summer" : `Term ${group.term}`} · {group.label}
                 </div>
                 <div className="pattern-row__body">
                   <div className="course-card-grid">
-                    {group.slots.map((slot) => {
-                      const code = assignments[slot.id] ?? null;
-                      return (
-                        <CourseInfoCard
-                          key={slot.id}
-                          code={code}
-                          major={major}
-                          fallbackRole={slot.role}
-                          selectable
-                          emptyLabel={
-                            slot.options && slot.options.length > 1
-                              ? `Choose: ${slot.options.join(" or ")}`
-                              : "Click to choose elective…"
-                          }
-                          onClick={() => onSelectSlot(slot.id)}
-                        />
-                      );
-                    })}
-                    {termManual.map((slot) => renderManualSlot(slot, true))}
+                    {group.majorSlots.map((slot) => renderMajorSlot(slot))}
+                    {group.manualSlots.map((slot) => renderManualSlot(slot, true))}
                   </div>
+                  {group.majorSlots.length === 0 && group.manualSlots.length === 0 && (
+                    <p className="pattern-placeholder">
+                      No courses here yet — move a course in, or add University Core /
+                      free elective.
+                    </p>
+                  )}
                   <div className="term-add-row">
                     <button
                       type="button"
                       className="btn btn--ghost term-add"
                       disabled={!canPlaceUc}
-                      title={
-                        canPlaceUc
-                          ? "Choose a University Core requirement to place in this term"
-                          : "All University Core slots are already placed in terms"
-                      }
                       onClick={() => onRequestPlaceUc(group.year, group.term)}
                     >
                       Add University Core
@@ -292,9 +324,8 @@ export function CoursePattern({
             </div>
           )}
           <p className="pool-hint">
-            Tip: on any term, click <strong>Add University Core</strong> to park
-            one of these slots there (English, GE, PE, etc.), then fill in the
-            course.
+            Tip: click a course card, then <strong>Move</strong>, or use the Move
+            link under a card to change terms without deleting and re-searching.
           </p>
         </div>
       </div>

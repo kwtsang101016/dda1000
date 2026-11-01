@@ -8,10 +8,18 @@ interface Props {
   current: ManualCourse | null;
   onSave: (course: ManualCourse) => void;
   onClear?: () => void;
+  onMove?: () => void;
   onClose: () => void;
 }
 
-export function ManualCourseForm({ slot, current, onSave, onClear, onClose }: Props) {
+export function ManualCourseForm({
+  slot,
+  current,
+  onSave,
+  onClear,
+  onMove,
+  onClose,
+}: Props) {
   const [code, setCode] = useState(current?.code ?? "");
   const [title, setTitle] = useState(current?.title ?? "");
   const [units, setUnits] = useState(current?.units ?? slot.units);
@@ -59,6 +67,11 @@ export function ManualCourseForm({ slot, current, onSave, onClear, onClose }: Pr
             </p>
           </div>
           <div className="picker__head-actions">
+            {onMove && (
+              <button type="button" className="btn btn--ghost" onClick={onMove}>
+                Move
+              </button>
+            )}
             {onClear && current && (
               <button type="button" className="btn btn--ghost" onClick={onClear}>
                 Clear

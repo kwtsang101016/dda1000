@@ -8,7 +8,7 @@ import {
   rolesForMajor,
   streamsForMajor,
 } from "../lib/courseUtils";
-import type { PlanSlot } from "../lib/planSlots";
+import { termLabelFor, type PlanSlot, type TermPlacement } from "../lib/planSlots";
 import "./CoursePicker.css";
 
 const ROLE_FILTERS: RoleTag[] = ["school-package", "major-required", "major-elective"];
@@ -18,8 +18,10 @@ interface Props {
   major: MajorId;
   taken: Set<string>;
   currentCode: string | null;
+  currentPlace?: TermPlacement | null;
   onPick: (code: string) => void;
   onClear?: () => void;
+  onMove?: () => void;
   onClose: () => void;
 }
 
@@ -28,8 +30,10 @@ export function CoursePicker({
   major,
   taken,
   currentCode,
+  currentPlace,
   onPick,
   onClear,
+  onMove,
   onClose,
 }: Props) {
   const seededOptions = slot.options && slot.options.length > 0;
@@ -96,12 +100,21 @@ export function CoursePicker({
               {slot.kind === "elective" ? "Choose major elective" : "Choose course"}
             </h2>
             <p>
-              {slot.year != null ? `Year ${slot.year} · Term ${slot.term} · ` : ""}
+              {currentPlace
+                ? `Year ${currentPlace.year} · ${termLabelFor(currentPlace.term)} · `
+                : slot.year != null
+                  ? `Year ${slot.year} · ${termLabelFor(slot.term ?? 1)} · `
+                  : ""}
               {slot.role}
               {seededOptions ? ` · ${slot.options!.join(" or ")}` : ""}
             </p>
           </div>
           <div className="picker__head-actions">
+            {onMove && (
+              <button type="button" className="btn btn--ghost" onClick={onMove}>
+                Move
+              </button>
+            )}
             {onClear && currentCode && (
               <button type="button" className="btn btn--ghost" onClick={onClear}>
                 Clear

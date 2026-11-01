@@ -1,10 +1,10 @@
 import { useEffect } from "react";
-import type { PlanSlot } from "../lib/planSlots";
+import { termLabelFor, type PlanSlot, type TermKind } from "../lib/planSlots";
 import "./CoursePicker.css";
 
 interface Props {
   year: number;
-  term: 1 | 2;
+  term: TermKind;
   options: PlanSlot[];
   onPick: (slotId: string) => void;
   onClose: () => void;
@@ -32,8 +32,8 @@ export function UcCategoryPicker({ year, term, options, onPick, onClose }: Props
           <div>
             <h2 id="uc-pick-title">Which University Core requirement?</h2>
             <p>
-              Year {year} · Term {term}. Pick the requirement bucket this course
-              should count toward (not the course subject itself).
+              Year {year} · {termLabelFor(term)}. Pick the requirement bucket this
+              course should count toward (not the course subject itself).
             </p>
           </div>
           <div className="picker__head-actions">

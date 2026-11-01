@@ -7,11 +7,14 @@ import { getCourse } from "./courseUtils";
 
 export type SlotKind = "catalog" | "elective" | "uc" | "free";
 
+/** Regular terms plus optional Summer. */
+export type TermKind = 1 | 2 | "summer";
+
 export interface PlanSlot {
   id: string;
   kind: SlotKind;
   year?: number;
-  term?: 1 | 2;
+  term?: TermKind;
   termLabel?: string;
   role: string;
   roleTag?: RoleTag;
@@ -22,26 +25,39 @@ export interface PlanSlot {
   category?: string;
 }
 
-/** Catalogue / elective: course code or null. UC / free: JSON ManualCourse or null encoded separately. */
+/** Catalogue / elective: course code or null. UC / free stored separately. */
 export type PlanAssignments = Record<string, string | null>;
 export type ManualAssignments = Record<string, ManualCourse | null>;
 
-/** Where a University Core / Free Elective slot sits in the year–term timeline. */
-export type TermPlacement = { year: number; term: 1 | 2 };
+/** Where a slot sits in the year–term timeline (overrides pattern default). */
+export type TermPlacement = { year: number; term: TermKind };
 export type SlotPlacements = Record<string, TermPlacement>;
 
-export function termLabelFor(term: 1 | 2): string {
+export function termLabelFor(term: TermKind): string {
+  if (term === "summer") return "Summer";
   return term === 1 ? "1st term" : "2nd term";
 }
 
-export function isPlacedInTerm(
+export function termSortKey(term: TermKind): number {
+  if (term === 1) return 1;
+  if (term === 2) return 2;
+  return 3;
+}
+
+export function samePlacement(a: TermPlacement, b: TermPlacement): boolean {
+  return a.year === b.year && a.term === b.term;
+}
+
+/** Effective location: explicit placement, else pattern default, else null (UC/free pool). */
+export function effectivePlacement(
+  slot: PlanSlot,
   placements: SlotPlacements,
-  slotId: string,
-  year: number,
-  term: 1 | 2,
-): boolean {
-  const p = placements[slotId];
-  return Boolean(p && p.year === year && p.term === term);
+): TermPlacement | null {
+  if (placements[slot.id]) return placements[slot.id];
+  if (slot.year != null && slot.term != null) {
+    return { year: slot.year, term: slot.term };
+  }
+  return null;
 }
 
 export function buildMajorSlots(major: MajorId, feStream?: FeStreamId | null): PlanSlot[] {
@@ -145,10 +161,6 @@ export function emptyManualAssignments(slots: PlanSlot[]): ManualAssignments {
   return out;
 }
 
-export function resolvedCatalogCode(slot: PlanSlot, assignments: PlanAssignments): string | null {
-  return assignments[slot.id] ?? null;
-}
-
 export function takenCodes(
   slots: PlanSlot[],
   assignments: PlanAssignments,
@@ -164,17 +176,70 @@ export function takenCodes(
   return set;
 }
 
-export function catalogUnits(slots: PlanSlot[], assignments: PlanAssignments): number {
-  let sum = 0;
-  for (const slot of slots) {
-    if (slot.kind !== "catalog" && slot.kind !== "elective") continue;
-    const code = assignments[slot.id];
-    if (!code) continue;
-    sum += getCourse(code)?.units ?? slot.units;
-  }
-  return sum;
+export interface TermGroup {
+  key: string;
+  year: number;
+  term: TermKind;
+  label: string;
+  majorSlots: PlanSlot[];
+  manualSlots: PlanSlot[];
 }
 
-export function manualUnits(manual: ManualAssignments): number {
-  return Object.values(manual).reduce((sum, course) => sum + (course?.units ?? 0), 0);
+/** Build timeline rows including optional Summers and moved destinations. */
+export function buildTermGroups(
+  majorSlots: PlanSlot[],
+  manualSlots: PlanSlot[],
+  placements: SlotPlacements,
+  summerYears: number[],
+): TermGroup[] {
+  const keys = new Map<string, TermPlacement>();
+
+  for (const slot of majorSlots) {
+    const place = effectivePlacement(slot, placements);
+    if (!place) continue;
+    keys.set(`${place.year}-${place.term}`, place);
+  }
+  for (const slot of manualSlots) {
+    const place = placements[slot.id];
+    if (!place) continue;
+    keys.set(`${place.year}-${place.term}`, place);
+  }
+  for (const year of summerYears) {
+    keys.set(`${year}-summer`, { year, term: "summer" });
+  }
+
+  const groups: TermGroup[] = [...keys.values()]
+    .sort((a, b) => a.year - b.year || termSortKey(a.term) - termSortKey(b.term))
+    .map((place) => ({
+      key: `${place.year}-${place.term}`,
+      year: place.year,
+      term: place.term,
+      label: termLabelFor(place.term),
+      majorSlots: majorSlots.filter((slot) => {
+        const p = effectivePlacement(slot, placements);
+        return p != null && samePlacement(p, place);
+      }),
+      manualSlots: manualSlots.filter((slot) => {
+        const p = placements[slot.id];
+        return p != null && samePlacement(p, place);
+      }),
+    }));
+
+  return groups;
+}
+
+export function placementOptions(
+  summerYears: number[],
+  extraYears: number[] = [1, 2, 3, 4],
+): TermPlacement[] {
+  const years = [...new Set([...extraYears, ...summerYears])].sort((a, b) => a - b);
+  const out: TermPlacement[] = [];
+  for (const year of years) {
+    out.push({ year, term: 1 });
+    out.push({ year, term: 2 });
+    if (summerYears.includes(year)) {
+      out.push({ year, term: "summer" });
+    }
+  }
+  return out;
 }

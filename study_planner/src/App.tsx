@@ -4,6 +4,7 @@ import { CoursePicker } from "./components/CoursePicker";
 import { InstallHint } from "./components/InstallHint";
 import { MajorSelector } from "./components/MajorSelector";
 import { ManualCourseForm } from "./components/ManualCourseForm";
+import { MoveTermDialog } from "./components/MoveTermDialog";
 import { Notes } from "./components/Notes";
 import { RequirementsSummary } from "./components/RequirementsSummary";
 import { UcCategoryPicker } from "./components/UcCategoryPicker";
@@ -13,6 +14,7 @@ import {
   buildFreeSlots,
   buildMajorSlots,
   buildUcSlots,
+  effectivePlacement,
   emptyManualAssignments,
   seedCatalogAssignments,
   takenCodes,
@@ -20,6 +22,8 @@ import {
   type PlanAssignments,
   type PlanSlot,
   type SlotPlacements,
+  type TermKind,
+  type TermPlacement,
 } from "./lib/planSlots";
 import {
   downloadPlanExport,
@@ -43,12 +47,11 @@ export default function App() {
   const [assignments, setAssignments] = useState<PlanAssignments>(saved.assignments);
   const [manual, setManual] = useState<ManualAssignments>(saved.manual);
   const [placements, setPlacements] = useState<SlotPlacements>(saved.placements);
+  const [summerYears, setSummerYears] = useState<number[]>(saved.summerYears);
   const [freeExtra, setFreeExtra] = useState<PlanSlot[]>([]);
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
-  const [ucPlaceTarget, setUcPlaceTarget] = useState<{
-    year: number;
-    term: 1 | 2;
-  } | null>(null);
+  const [movingSlotId, setMovingSlotId] = useState<string | null>(null);
+  const [ucPlaceTarget, setUcPlaceTarget] = useState<TermPlacement | null>(null);
 
   const ready = major != null && (major !== "FE" || feStream != null);
 
@@ -76,9 +79,21 @@ export default function App() {
     [allSlots, activeSlotId],
   );
 
+  const movingSlot = useMemo(
+    () => allSlots.find((s) => s.id === movingSlotId) ?? null,
+    [allSlots, movingSlotId],
+  );
+
   useEffect(() => {
-    savePlannerState({ major, feStream, assignments, manual, placements });
-  }, [major, feStream, assignments, manual, placements]);
+    savePlannerState({
+      major,
+      feStream,
+      assignments,
+      manual,
+      placements,
+      summerYears,
+    });
+  }, [major, feStream, assignments, manual, placements, summerYears]);
 
   function confirmReseed(): boolean {
     return window.confirm(
@@ -109,14 +124,9 @@ export default function App() {
       return merged;
     });
     setPlacements((prev) => {
-      const nextIds = new Set([
-        ...buildUcSlots().map((s) => s.id),
-        ...buildFreeSlots(next).map((s) => s.id),
-        ...Object.keys(prev).filter((id) => id.startsWith("free-extra-")),
-      ]);
       const kept: SlotPlacements = {};
       for (const [id, place] of Object.entries(prev)) {
-        if (nextIds.has(id) || id.startsWith("uc-") || id.startsWith("free-")) {
+        if (id.startsWith("uc-") || id.startsWith("free-")) {
           kept[id] = place;
         }
       }
@@ -124,6 +134,7 @@ export default function App() {
     });
     setFreeExtra([]);
     setActiveSlotId(null);
+    setMovingSlotId(null);
   }
 
   function handleMajorChange(next: MajorId) {
@@ -142,17 +153,32 @@ export default function App() {
     if (!major || (major === "FE" && !feStream)) return;
     if (
       !window.confirm(
-        "Reset major pattern to the official recommended courses? University Core and Free Electives stay.",
+        "Reset major pattern to the official recommended courses? University Core, Free Electives, Summer rows, and term moves for UC/free stay. Major course term moves reset.",
       )
     ) {
       return;
     }
     setAssignments(seedCatalogAssignments(major, feStream));
+    setPlacements((prev) => {
+      const kept: SlotPlacements = {};
+      for (const [id, place] of Object.entries(prev)) {
+        if (id.startsWith("uc-") || id.startsWith("free-")) kept[id] = place;
+      }
+      return kept;
+    });
     setActiveSlotId(null);
+    setMovingSlotId(null);
   }
 
   function handleExport() {
-    downloadPlanExport({ major, feStream, assignments, manual, placements });
+    downloadPlanExport({
+      major,
+      feStream,
+      assignments,
+      manual,
+      placements,
+      summerYears,
+    });
   }
 
   async function handleImport(file: File) {
@@ -170,8 +196,10 @@ export default function App() {
       setAssignments(imported.assignments);
       setManual(imported.manual);
       setPlacements(imported.placements);
+      setSummerYears(imported.summerYears);
       setFreeExtra([]);
       setActiveSlotId(null);
+      setMovingSlotId(null);
     } catch (err) {
       window.alert(err instanceof Error ? err.message : "Import failed.");
     }
@@ -226,24 +254,25 @@ export default function App() {
       return next;
     });
     if (activeSlotId === slotId) setActiveSlotId(null);
+    if (movingSlotId === slotId) setMovingSlotId(null);
   }
 
-  function handleRequestPlaceUc(year: number, term: 1 | 2) {
+  function handleRequestPlaceUc(year: number, term: TermKind) {
     setUcPlaceTarget({ year, term });
   }
 
   function handleConfirmPlaceUc(slotId: string) {
     if (!ucPlaceTarget) return;
-    const { year, term } = ucPlaceTarget;
-    setPlacements((prev) => ({ ...prev, [slotId]: { year, term } }));
+    setPlacements((prev) => ({ ...prev, [slotId]: ucPlaceTarget }));
     setUcPlaceTarget(null);
     setActiveSlotId(slotId);
   }
 
-  function handlePlaceFreeInTerm(year: number, term: 1 | 2) {
+  function handlePlaceFreeInTerm(year: number, term: TermKind) {
+    const place = { year, term };
     const existing = freeSlots.find((s) => !placements[s.id]);
     if (existing) {
-      setPlacements((prev) => ({ ...prev, [existing.id]: { year, term } }));
+      setPlacements((prev) => ({ ...prev, [existing.id]: place }));
       setActiveSlotId(existing.id);
       return;
     }
@@ -253,7 +282,7 @@ export default function App() {
       { id, kind: "free", role: "Free elective", units: 3 },
     ]);
     setManual((prev) => ({ ...prev, [id]: null }));
-    setPlacements((prev) => ({ ...prev, [id]: { year, term } }));
+    setPlacements((prev) => ({ ...prev, [id]: place }));
     setActiveSlotId(id);
   }
 
@@ -266,7 +295,52 @@ export default function App() {
     });
   }
 
+  function handleRequestMove(slotId: string) {
+    setActiveSlotId(null);
+    setMovingSlotId(slotId);
+  }
+
+  function handleConfirmMove(place: TermPlacement) {
+    if (!movingSlotId) return;
+    if (place.term === "summer") {
+      setSummerYears((prev) =>
+        prev.includes(place.year) ? prev : [...prev, place.year].sort((a, b) => a - b),
+      );
+    }
+    setPlacements((prev) => ({ ...prev, [movingSlotId]: place }));
+    setMovingSlotId(null);
+  }
+
+  function handleAddSummer(year: number) {
+    setSummerYears((prev) =>
+      prev.includes(year) ? prev : [...prev, year].sort((a, b) => a - b),
+    );
+  }
+
+  function handleRemoveSummer(year: number) {
+    const occupied = Object.entries(placements).some(
+      ([, p]) => p.year === year && p.term === "summer",
+    );
+    const majorInSummer = majorSlots.some((slot) => {
+      const p = effectivePlacement(slot, placements);
+      return p?.year === year && p.term === "summer";
+    });
+    if (occupied || majorInSummer) {
+      window.alert(
+        `Year ${year} Summer still has courses. Move them to another term first, then remove Summer.`,
+      );
+      return;
+    }
+    setSummerYears((prev) => prev.filter((y) => y !== year));
+  }
+
   const majorLabel = major ? MAJORS[major].label : null;
+  const movingPlace = movingSlot
+    ? effectivePlacement(movingSlot, placements)
+    : null;
+  const activePlace = activeSlot
+    ? effectivePlacement(activeSlot, placements)
+    : null;
 
   return (
     <div className="app">
@@ -277,8 +351,8 @@ export default function App() {
           <h1 className="hero__title">Build your 2026–27 study plan</h1>
           <p className="hero__lead">
             Choose CSE, DSBDT, STA, or FE, seed the official recommended pattern,
-            then edit every slot. Add University Core and Free Electives into any
-            term on the path to 120 units.
+            then edit and move courses across terms — including optional Summer —
+            on the path to 120 units.
           </p>
           <p className="hero__meta">
             {majorLabel
@@ -326,7 +400,9 @@ export default function App() {
               assignments={assignments}
               manual={manual}
               placements={placements}
+              summerYears={summerYears}
               onSelectSlot={setActiveSlotId}
+              onRequestMove={handleRequestMove}
               onExport={handleExport}
               onImportFile={handleImport}
               onReseed={handleReseed}
@@ -335,6 +411,8 @@ export default function App() {
               onRequestPlaceUc={handleRequestPlaceUc}
               onPlaceFreeInTerm={handlePlaceFreeInTerm}
               onUnplaceSlot={handleUnplaceSlot}
+              onAddSummer={handleAddSummer}
+              onRemoveSummer={handleRemoveSummer}
             />
           </>
         )}
@@ -364,8 +442,10 @@ export default function App() {
             major={major}
             taken={takenCodes(majorSlots, assignments, activeSlot.id)}
             currentCode={assignments[activeSlot.id] ?? null}
+            currentPlace={activePlace}
             onPick={handlePick}
             onClear={handleClearCatalog}
+            onMove={() => handleRequestMove(activeSlot.id)}
             onClose={() => setActiveSlotId(null)}
           />
         )}
@@ -376,6 +456,11 @@ export default function App() {
           current={manual[activeSlot.id] ?? null}
           onSave={handleManualSave}
           onClear={handleManualClear}
+          onMove={
+            placements[activeSlot.id]
+              ? () => handleRequestMove(activeSlot.id)
+              : undefined
+          }
           onClose={() => setActiveSlotId(null)}
         />
       )}
@@ -387,6 +472,20 @@ export default function App() {
           options={ucSlots.filter((s) => !placements[s.id])}
           onPick={handleConfirmPlaceUc}
           onClose={() => setUcPlaceTarget(null)}
+        />
+      )}
+
+      {movingSlot && (
+        <MoveTermDialog
+          title={`Move ${
+            movingSlot.kind === "uc" || movingSlot.kind === "free"
+              ? manual[movingSlot.id]?.code || movingSlot.category || movingSlot.role
+              : assignments[movingSlot.id] || movingSlot.role
+          }`}
+          current={movingPlace}
+          summerYears={summerYears}
+          onMove={handleConfirmMove}
+          onClose={() => setMovingSlotId(null)}
         />
       )}
     </div>
