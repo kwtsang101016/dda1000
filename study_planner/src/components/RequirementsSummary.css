@@ -1,8 +1,21 @@
+.req-check {
+  display: inline-flex;
+  color: #1f6b4a;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
 .req-total {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 10px;
   margin-bottom: 20px;
+}
+
+.req-total--ok .req-total__number {
+  background: linear-gradient(135deg, #1f6b4a, #2f9e6a);
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 .req-total__number {
@@ -29,8 +42,16 @@
 .req-bar__head {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 6px;
   font-size: 0.95rem;
+}
+
+.req-bar__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .req-bar__track {
@@ -44,6 +65,11 @@
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--accent), #818cf8);
+  transition: width 0.25s ease;
+}
+
+.req-bar--ok .req-bar__fill {
+  background: linear-gradient(90deg, #1f6b4a, #3fbf7f);
 }
 
 .req-bar__detail {
@@ -137,8 +163,11 @@
   background: rgba(255, 252, 245, 0.9);
 }
 
-.stream-claim__status strong {
-  display: block;
+.stream-claim__status strong,
+.stream-claim__status-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   font-size: 0.95rem;
 }
 

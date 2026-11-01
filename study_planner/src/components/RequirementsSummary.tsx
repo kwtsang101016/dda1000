@@ -24,19 +24,49 @@ interface Props {
   onClaimedStreamChange: (stream: StreamTag | null) => void;
 }
 
+interface Bucket {
+  filled: number;
+  target: number;
+  filledSlots: number;
+  slots: number;
+}
+
 function bucketUnits(
   slots: PlanSlot[],
   assignments: PlanAssignments,
   role: RoleTag,
-): { filled: number; slots: number } {
+): Bucket {
   const relevant = slots.filter((s) => s.roleTag === role);
   let filled = 0;
+  let filledSlots = 0;
+  let target = 0;
   for (const slot of relevant) {
+    target += slot.units;
     const code = assignments[slot.id];
     if (!code) continue;
+    filledSlots += 1;
     filled += getCourse(code)?.units ?? slot.units;
   }
-  return { filled, slots: relevant.length };
+  return { filled, target, filledSlots, slots: relevant.length };
+}
+
+function SatisfiedMark({ ok }: { ok: boolean }) {
+  if (!ok) return null;
+  return (
+    <span className="req-check" title="Requirement met" aria-label="Requirement met">
+      <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+        <circle cx="10" cy="10" r="10" fill="currentColor" />
+        <path
+          d="M5.8 10.2 8.6 13l5.6-6.2"
+          fill="none"
+          stroke="#fff"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  );
 }
 
 export function RequirementsSummary({
@@ -71,6 +101,14 @@ export function RequirementsSummary({
   const claimProgress = analyzeClaimedStream(major, claimedStream, taken);
   const extras = analyzeExtraMajorChecks(major, taken);
 
+  const schoolOk = school.slots > 0 && school.filledSlots === school.slots;
+  const requiredOk = required.slots > 0 && required.filledSlots === required.slots;
+  const electiveOk = elective.slots > 0 && elective.filledSlots === elective.slots;
+  const ucOk = ucFilled >= UNIVERSITY_CORE_UNITS && remainingUcLabels.length === 0;
+  const freeOk = freeFilled >= freeTarget && remainingFreeSlots === 0;
+  const majorOk = majorFilled >= info.majorUnits;
+  const totalOk = totalFilled >= GRADUATION_TOTAL;
+
   const bars = [
     {
       label: "University Core",
@@ -80,35 +118,35 @@ export function RequirementsSummary({
         remainingUcLabels.length > 0
           ? `Still to place on a term: ${remainingUcLabels.join(", ")}`
           : "Chinese 3 + English 12 + Digital & AI Literacy 1 + GE 18 + PE 2 · all on timeline",
-      ok: null as boolean | null,
+      ok: ucOk,
     },
     {
       label: ROLE_LABELS["school-package"],
       filled: school.filled,
-      target: null as number | null,
-      detail: `${school.slots} slots in recommended pattern`,
-      ok: null,
+      target: school.target,
+      detail: `${school.filledSlots} / ${school.slots} slots filled in recommended pattern`,
+      ok: schoolOk,
     },
     {
       label: ROLE_LABELS["major-required"],
       filled: required.filled,
-      target: null,
-      detail: `${required.slots} slots in recommended pattern`,
-      ok: null,
+      target: required.target,
+      detail: `${required.filledSlots} / ${required.slots} slots filled in recommended pattern`,
+      ok: requiredOk,
     },
     {
       label: ROLE_LABELS["major-elective"],
       filled: elective.filled,
-      target: null,
-      detail: `${elective.slots} elective slots in recommended pattern`,
-      ok: null,
+      target: elective.target,
+      detail: `${elective.filledSlots} / ${elective.slots} elective slots filled`,
+      ok: electiveOk,
     },
     {
       label: "Major total",
       filled: majorFilled,
       target: info.majorUnits,
       detail: "School package + major required + major electives",
-      ok: majorFilled >= info.majorUnits,
+      ok: majorOk,
     },
     {
       label: "Free Electives",
@@ -118,7 +156,7 @@ export function RequirementsSummary({
         remainingFreeSlots > 0
           ? `${GRADUATION_TOTAL} − ${UNIVERSITY_CORE_UNITS} UC − ${info.majorUnits} major · ${remainingFreeSlots} slot(s) not yet on a term`
           : `${GRADUATION_TOTAL} − ${UNIVERSITY_CORE_UNITS} UC − ${info.majorUnits} major`,
-      ok: freeFilled >= freeTarget,
+      ok: freeOk,
     },
   ];
 
@@ -133,23 +171,27 @@ export function RequirementsSummary({
           scheme {info.lastUpdate}.
         </p>
       </div>
-      <div className="req-total">
+      <div className={`req-total${totalOk ? " req-total--ok" : ""}`}>
+        <SatisfiedMark ok={totalOk} />
         <span className="req-total__number">{totalFilled}</span>
         <span className="req-total__label">/ {GRADUATION_TOTAL} units planned</span>
       </div>
       <div className="req-bars">
         {bars.map((item) => {
-          const pct = item.target
-            ? Math.min(100, (item.filled / item.target) * 100)
-            : Math.min(100, item.filled > 0 ? 40 + item.filled : 0);
+          const pct =
+            item.target > 0 ? Math.min(100, (item.filled / item.target) * 100) : 0;
           return (
-            <div key={item.label} className="req-bar">
+            <div
+              key={item.label}
+              className={`req-bar${item.ok ? " req-bar--ok" : ""}`}
+            >
               <div className="req-bar__head">
-                <span>{item.label}</span>
+                <span className="req-bar__label">
+                  <SatisfiedMark ok={item.ok} />
+                  {item.label}
+                </span>
                 <strong>
-                  {item.filled}
-                  {item.target != null ? ` / ${item.target}` : ""} units
-                  {item.ok === true ? " · OK" : item.ok === false ? " · short" : ""}
+                  {item.filled} / {item.target} units
                 </strong>
               </div>
               <div className="req-bar__track">
@@ -199,7 +241,8 @@ export function RequirementsSummary({
                   : " stream-claim__status--short"
               }`}
             >
-              <strong>
+              <strong className="stream-claim__status-title">
+                <SatisfiedMark ok={claimProgress.satisfied} />
                 {STREAM_LABELS[claimProgress.stream]}: {claimProgress.count} /{" "}
                 {claimProgress.minCourses} stream courses on your plan
                 {claimProgress.satisfied ? " — requirement met" : " — not yet enough to declare"}
@@ -241,7 +284,8 @@ export function RequirementsSummary({
               : " stream-claim__status--short"
           }`}
         >
-          <strong>
+          <strong className="stream-claim__status-title">
+            <SatisfiedMark ok={extras.staDepth.satisfied} />
             STA depth requirement: {extras.staDepth.count} / {extras.staDepth.minCourses}{" "}
             courses in best stream ({STREAM_LABELS[extras.staDepth.stream]})
             {extras.staDepth.satisfied ? " — met" : " — need 3 from any one stream"}
@@ -262,7 +306,8 @@ export function RequirementsSummary({
               : " stream-claim__status--short"
           }`}
         >
-          <strong>
+          <strong className="stream-claim__status-title">
+            <SatisfiedMark ok={extras.cseGroupA.satisfied} />
             CSE elective group (a): {extras.cseGroupA.units} / {extras.cseGroupA.min}{" "}
             units (of {extras.cseGroupA.totalTarget} elective units total)
             {extras.cseGroupA.satisfied ? " — met" : " — need ≥18u from group (a)"}
