@@ -17,6 +17,9 @@ interface Props {
   majorSlots: PlanSlot[];
   assignments: PlanAssignments;
   manual: ManualAssignments;
+  /** Unplaced UC requirement labels still available via “Add University Core”. */
+  remainingUcLabels?: string[];
+  remainingFreeSlots?: number;
 }
 
 function bucketUnits(
@@ -40,6 +43,8 @@ export function RequirementsSummary({
   majorSlots,
   assignments,
   manual,
+  remainingUcLabels = [],
+  remainingFreeSlots = 0,
 }: Props) {
   const info = MAJORS[major];
   const freeTarget = freeElectiveUnits(major);
@@ -65,7 +70,10 @@ export function RequirementsSummary({
       label: "University Core",
       filled: ucFilled,
       target: UNIVERSITY_CORE_UNITS,
-      detail: "Chinese 3 + English 12 + Digital & AI Literacy 1 + GE 18 + PE 2",
+      detail:
+        remainingUcLabels.length > 0
+          ? `Still to place on a term: ${remainingUcLabels.join(", ")}`
+          : "Chinese 3 + English 12 + Digital & AI Literacy 1 + GE 18 + PE 2 · all on timeline",
     },
     {
       label: ROLE_LABELS["school-package"],
@@ -95,7 +103,10 @@ export function RequirementsSummary({
       label: "Free Electives",
       filled: freeFilled,
       target: freeTarget,
-      detail: `${GRADUATION_TOTAL} − ${UNIVERSITY_CORE_UNITS} UC − ${info.majorUnits} major`,
+      detail:
+        remainingFreeSlots > 0
+          ? `${GRADUATION_TOTAL} − ${UNIVERSITY_CORE_UNITS} UC − ${info.majorUnits} major · ${remainingFreeSlots} slot(s) not yet on a term`
+          : `${GRADUATION_TOTAL} − ${UNIVERSITY_CORE_UNITS} UC − ${info.majorUnits} major · all free-elective slots on timeline`,
     },
   ];
 

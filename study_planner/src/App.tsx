@@ -229,15 +229,6 @@ export default function App() {
     setActiveSlotId(null);
   }
 
-  function handleAddFreeSlot() {
-    const id = `free-extra-${Date.now()}`;
-    setFreeExtra((prev) => [
-      ...prev,
-      { id, kind: "free", role: "Free elective", units: 3 },
-    ]);
-    setManual((prev) => ({ ...prev, [id]: null }));
-  }
-
   function handleRemoveFreeSlot(slotId: string) {
     if (slotId.startsWith("free-extra-")) {
       setFreeExtra((prev) => prev.filter((s) => s.id !== slotId));
@@ -390,6 +381,10 @@ export default function App() {
               majorSlots={majorSlots}
               assignments={assignments}
               manual={manual}
+              remainingUcLabels={ucSlots
+                .filter((s) => !placements[s.id])
+                .map((s) => s.category ?? "University Core")}
+              remainingFreeSlots={freeSlots.filter((s) => !placements[s.id]).length}
             />
             <CoursePattern
               major={major}
@@ -406,7 +401,6 @@ export default function App() {
               onExport={handleExport}
               onImportFile={handleImport}
               onReseed={handleReseed}
-              onAddFreeSlot={handleAddFreeSlot}
               onRemoveFreeSlot={handleRemoveFreeSlot}
               onRequestPlaceUc={handleRequestPlaceUc}
               onPlaceFreeInTerm={handlePlaceFreeInTerm}
