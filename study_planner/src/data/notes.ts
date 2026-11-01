@@ -6,4 +6,5 @@ export const PLANNER_NOTES: string[] = [
   "Letter variants of the same code (e.g. STA2001 / STA2001H, MAT2041 / MAT2041A) are mutually exclusive — once one is on your plan, the others are hidden.",
   "FE students must specialize in Quantitative Finance or FinTech; the recommended pattern differs by stream.",
   "Scheme footnotes for each major appear under Requirements summary.",
+  "When your plan is ready, use Export as PDF to send a readable copy to your instructor for comments. Export/Import JSON is for backing up or restoring the editable plan in the browser.",
 ];

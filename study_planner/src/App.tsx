@@ -27,6 +27,7 @@ import {
   type TermKind,
   type TermPlacement,
 } from "./lib/planSlots";
+import { downloadPlanPdf } from "./lib/exportPdf";
 import {
   downloadPlanExport,
   importPlanFromFile,
@@ -209,6 +210,28 @@ export default function App() {
       claimedStream,
       electiveExtra,
     });
+  }
+
+  async function handleExportPdf() {
+    if (!major) return;
+    try {
+      await downloadPlanPdf({
+        major,
+        feStream,
+        majorSlots,
+        ucSlots,
+        freeSlots,
+        assignments,
+        manual,
+        placements,
+        summerYears,
+        claimedStream,
+      });
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "Could not create the PDF. Please try again.",
+      );
+    }
   }
 
   async function handleImport(file: File) {
@@ -459,6 +482,7 @@ export default function App() {
               onSelectSlot={setActiveSlotId}
               onRequestMove={handleRequestMove}
               onExport={handleExport}
+              onExportPdf={handleExportPdf}
               onImportFile={handleImport}
               onReseed={handleReseed}
               onRemoveFreeSlot={handleRemoveFreeSlot}

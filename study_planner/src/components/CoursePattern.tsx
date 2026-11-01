@@ -27,6 +27,7 @@ interface CoursePatternProps {
   onSelectSlot: (slotId: string) => void;
   onRequestMove: (slotId: string) => void;
   onExport: () => void;
+  onExportPdf: () => void;
   onImportFile: (file: File) => void;
   onReseed: () => void;
   onRemoveFreeSlot: (slotId: string) => void;
@@ -52,6 +53,7 @@ export function CoursePattern({
   onSelectSlot,
   onRequestMove,
   onExport,
+  onExportPdf,
   onImportFile,
   onReseed,
   onRemoveFreeSlot,
@@ -213,15 +215,18 @@ export function CoursePattern({
           <button type="button" className="btn btn--ghost" onClick={onReseed}>
             Reset major pattern
           </button>
+          <button type="button" className="btn btn--ghost" onClick={onExportPdf}>
+            Export as PDF
+          </button>
           <button type="button" className="btn btn--ghost" onClick={onExport}>
-            Export plan
+            Export JSON
           </button>
           <button
             type="button"
             className="btn btn--ghost"
             onClick={() => fileInputRef.current?.click()}
           >
-            Import plan
+            Import JSON
           </button>
           <input
             ref={fileInputRef}
