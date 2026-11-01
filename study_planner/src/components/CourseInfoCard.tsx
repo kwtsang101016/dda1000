@@ -1,10 +1,11 @@
 import { STREAM_COLORS, STREAM_LABELS } from "../data/streams";
-import type { StreamTag } from "../data/types";
-import { getCourse } from "../lib/courseUtils";
+import type { MajorId, StreamTag } from "../data/types";
+import { getCourse, streamsForMajor } from "../lib/courseUtils";
 import "./CourseInfoCard.css";
 
 interface Props {
   code?: string | null;
+  major?: MajorId | null;
   /** Manual slot filled course. */
   manual?: { code: string; title: string; units: number } | null;
   fallbackRole?: string;
@@ -15,6 +16,7 @@ interface Props {
 
 export function CourseInfoCard({
   code,
+  major,
   manual,
   fallbackRole,
   emptyLabel = "Click to choose…",
@@ -68,7 +70,8 @@ export function CourseInfoCard({
 
   const course = getCourse(code);
   const title = course?.title ?? "Unknown course";
-  const streams = course?.streams ?? [];
+  const streams =
+    course && major ? streamsForMajor(course, major) : [];
   const units = course?.units ?? 3;
 
   const body = (

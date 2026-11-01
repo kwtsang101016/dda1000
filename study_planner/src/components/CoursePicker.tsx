@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { ROLE_LABELS, STREAM_COLORS, STREAM_LABELS, STREAMS_BY_MAJOR } from "../data/streams";
 import type { MajorId, RoleTag, StreamTag } from "../data/types";
-import { conflictsWithTaken, filterCatalogue, getCourse } from "../lib/courseUtils";
+import {
+  conflictsWithTaken,
+  filterCatalogue,
+  getCourse,
+  rolesForMajor,
+  streamsForMajor,
+} from "../lib/courseUtils";
 import type { PlanSlot } from "../lib/planSlots";
 import "./CoursePicker.css";
 
@@ -162,6 +168,8 @@ export function CoursePicker({
           {options.map((c) => {
             const blocked =
               conflictsWithTaken(c.code, taken) && c.code !== currentCode;
+            const roles = rolesForMajor(c, major);
+            const streams = streamsForMajor(c, major);
             return (
               <li key={c.code}>
                 <button
@@ -175,11 +183,11 @@ export function CoursePicker({
                     <span className="picker__title">{c.title}</span>
                     <span className="picker__sub">
                       {c.units}u
-                      {c.roles.length
-                        ? ` · ${c.roles.map((r) => ROLE_LABELS[r]).join(", ")}`
+                      {roles.length
+                        ? ` · ${roles.map((r) => ROLE_LABELS[r]).join(", ")}`
                         : ""}
-                      {c.streams.length
-                        ? ` · ${c.streams.map((s) => STREAM_LABELS[s]).join(", ")}`
+                      {streams.length
+                        ? ` · ${streams.map((s) => STREAM_LABELS[s]).join(", ")}`
                         : ""}
                       {blocked ? " · already taken" : ""}
                     </span>

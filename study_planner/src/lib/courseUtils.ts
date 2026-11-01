@@ -1,4 +1,9 @@
-import { COURSE_MAP, coursesForMajor } from "../data/courses";
+import {
+  COURSE_MAP,
+  coursesForMajor,
+  rolesForMajor,
+  streamsForMajor,
+} from "../data/courses";
 import type { Course, MajorId, RoleTag, StreamTag } from "../data/types";
 
 export function getCourse(code: string | null | undefined): Course | undefined {
@@ -23,14 +28,18 @@ export function filterCatalogue(options: {
   const q = options.query?.trim().toLowerCase() ?? "";
   return coursesForMajor(options.major)
     .filter((c) => {
+      const roles = rolesForMajor(c, options.major);
+      const streams = streamsForMajor(c, options.major);
       if (options.roles && options.roles.length > 0) {
-        if (!options.roles.some((r) => c.roles.includes(r))) return false;
+        if (!options.roles.some((r) => roles.includes(r))) return false;
       }
       if (options.streams && options.streams.length > 0) {
-        if (!options.streams.some((s) => c.streams.includes(s))) return false;
+        if (!options.streams.some((s) => streams.includes(s))) return false;
       }
       if (!q) return true;
       return c.code.toLowerCase().includes(q) || c.title.toLowerCase().includes(q);
     })
     .sort((a, b) => a.code.localeCompare(b.code));
 }
+
+export { rolesForMajor, streamsForMajor };

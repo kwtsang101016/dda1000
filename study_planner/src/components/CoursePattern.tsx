@@ -233,6 +233,7 @@ export function CoursePattern({
                         <CourseInfoCard
                           key={slot.id}
                           code={code}
+                          major={major}
                           fallbackRole={slot.role}
                           selectable
                           emptyLabel={

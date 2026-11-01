@@ -19,14 +19,18 @@ export type StreamTag =
   | "fe-qf"
   | "fe-fintech";
 
+/** Per-major membership: school package / required / elective (+ stream tags). */
+export interface CourseOffering {
+  roles: RoleTag[];
+  streams?: StreamTag[];
+}
+
 export interface Course {
   code: string;
   title: string;
   units: number;
-  /** Majors that list this course somewhere in their scheme. */
-  majors: MajorId[];
-  roles: RoleTag[];
-  streams: StreamTag[];
+  /** Role and stream tags differ by major (e.g. FIN2010 is FE school package, STA elective). */
+  offerings: Partial<Record<MajorId, CourseOffering>>;
   term2Only?: boolean;
   statusNote?: string;
 }
