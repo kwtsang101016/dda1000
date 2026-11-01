@@ -14,8 +14,10 @@ import {
   buildFreeSlots,
   buildMajorSlots,
   buildUcSlots,
+  createExtraElectiveSlot,
   effectivePlacement,
   emptyManualAssignments,
+  isExtraElectiveSlot,
   seedCatalogAssignments,
   takenCodes,
   type ManualAssignments,
@@ -52,16 +54,17 @@ export default function App() {
     saved.claimedStream,
   );
   const [freeExtra, setFreeExtra] = useState<PlanSlot[]>([]);
+  const [electiveExtra, setElectiveExtra] = useState<PlanSlot[]>(saved.electiveExtra);
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [movingSlotId, setMovingSlotId] = useState<string | null>(null);
   const [ucPlaceTarget, setUcPlaceTarget] = useState<TermPlacement | null>(null);
 
   const ready = major != null && (major !== "FE" || feStream != null);
 
-  const majorSlots = useMemo(
-    () => (ready && major ? buildMajorSlots(major, feStream) : []),
-    [ready, major, feStream],
-  );
+  const majorSlots = useMemo(() => {
+    const seeded = ready && major ? buildMajorSlots(major, feStream) : [];
+    return [...seeded, ...electiveExtra];
+  }, [ready, major, feStream, electiveExtra]);
   const ucSlots = useMemo(() => buildUcSlots(), []);
   const baseFreeSlots = useMemo(
     () => (major ? buildFreeSlots(major) : []),
@@ -96,8 +99,18 @@ export default function App() {
       placements,
       summerYears,
       claimedStream,
+      electiveExtra,
     });
-  }, [major, feStream, assignments, manual, placements, summerYears, claimedStream]);
+  }, [
+    major,
+    feStream,
+    assignments,
+    manual,
+    placements,
+    summerYears,
+    claimedStream,
+    electiveExtra,
+  ]);
 
   function confirmReseed(): boolean {
     return window.confirm(
@@ -137,6 +150,7 @@ export default function App() {
       return kept;
     });
     setFreeExtra([]);
+    setElectiveExtra([]);
     setClaimedStream(null);
     setActiveSlotId(null);
     setMovingSlotId(null);
@@ -163,11 +177,20 @@ export default function App() {
     ) {
       return;
     }
-    setAssignments(seedCatalogAssignments(major, feStream));
+    setAssignments((prev) => {
+      const seed = seedCatalogAssignments(major, feStream);
+      const keptExtras: PlanAssignments = {};
+      for (const [id, code] of Object.entries(prev)) {
+        if (isExtraElectiveSlot(id)) keptExtras[id] = code;
+      }
+      return { ...seed, ...keptExtras };
+    });
     setPlacements((prev) => {
       const kept: SlotPlacements = {};
       for (const [id, place] of Object.entries(prev)) {
-        if (id.startsWith("uc-") || id.startsWith("free-")) kept[id] = place;
+        if (id.startsWith("uc-") || id.startsWith("free-") || isExtraElectiveSlot(id)) {
+          kept[id] = place;
+        }
       }
       return kept;
     });
@@ -184,6 +207,7 @@ export default function App() {
       placements,
       summerYears,
       claimedStream,
+      electiveExtra,
     });
   }
 
@@ -204,6 +228,7 @@ export default function App() {
       setPlacements(imported.placements);
       setSummerYears(imported.summerYears);
       setClaimedStream(imported.claimedStream);
+      setElectiveExtra(imported.electiveExtra);
       setFreeExtra([]);
       setActiveSlotId(null);
       setMovingSlotId(null);
@@ -264,6 +289,32 @@ export default function App() {
     setPlacements((prev) => ({ ...prev, [slotId]: ucPlaceTarget }));
     setUcPlaceTarget(null);
     setActiveSlotId(slotId);
+  }
+
+  function handleAddMajorElective(year: number, term: TermKind) {
+    const slot = createExtraElectiveSlot(year, term);
+    setElectiveExtra((prev) => [...prev, slot]);
+    setAssignments((prev) => ({ ...prev, [slot.id]: null }));
+    setPlacements((prev) => ({ ...prev, [slot.id]: { year, term } }));
+    setActiveSlotId(slot.id);
+  }
+
+  function handleRemoveElectiveSlot(slotId: string) {
+    if (!isExtraElectiveSlot(slotId)) return;
+    setElectiveExtra((prev) => prev.filter((s) => s.id !== slotId));
+    setAssignments((prev) => {
+      const next = { ...prev };
+      delete next[slotId];
+      return next;
+    });
+    setPlacements((prev) => {
+      if (!(slotId in prev)) return prev;
+      const next = { ...prev };
+      delete next[slotId];
+      return next;
+    });
+    if (activeSlotId === slotId) setActiveSlotId(null);
+    if (movingSlotId === slotId) setMovingSlotId(null);
   }
 
   function handlePlaceFreeInTerm(year: number, term: TermKind) {
@@ -412,6 +463,8 @@ export default function App() {
               onReseed={handleReseed}
               onRemoveFreeSlot={handleRemoveFreeSlot}
               onRequestPlaceUc={handleRequestPlaceUc}
+              onAddMajorElective={handleAddMajorElective}
+              onRemoveElectiveSlot={handleRemoveElectiveSlot}
               onPlaceFreeInTerm={handlePlaceFreeInTerm}
               onUnplaceSlot={handleUnplaceSlot}
               onAddSummer={handleAddSummer}

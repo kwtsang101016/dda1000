@@ -4,6 +4,7 @@ import type { FeStreamId, MajorId, ManualCourse } from "../data/types";
 import { getCourse } from "../lib/courseUtils";
 import {
   buildTermGroups,
+  isExtraElectiveSlot,
   type ManualAssignments,
   type PlanAssignments,
   type PlanSlot,
@@ -30,6 +31,8 @@ interface CoursePatternProps {
   onReseed: () => void;
   onRemoveFreeSlot: (slotId: string) => void;
   onRequestPlaceUc: (year: number, term: TermKind) => void;
+  onAddMajorElective: (year: number, term: TermKind) => void;
+  onRemoveElectiveSlot: (slotId: string) => void;
   onPlaceFreeInTerm: (year: number, term: TermKind) => void;
   onUnplaceSlot: (slotId: string) => void;
   onAddSummer: (year: number) => void;
@@ -53,6 +56,8 @@ export function CoursePattern({
   onReseed,
   onRemoveFreeSlot,
   onRequestPlaceUc,
+  onAddMajorElective,
+  onRemoveElectiveSlot,
   onPlaceFreeInTerm,
   onUnplaceSlot,
   onAddSummer,
@@ -175,6 +180,15 @@ export function CoursePattern({
           >
             Move
           </button>
+          {isExtraElectiveSlot(slot.id) && (
+            <button
+              type="button"
+              className="free-slot-remove"
+              onClick={() => onRemoveElectiveSlot(slot.id)}
+            >
+              Remove
+            </button>
+          )}
         </div>
       </div>
     );
@@ -191,8 +205,8 @@ export function CoursePattern({
             {major === "FE" && feStream
               ? ` (${feStream === "qf" ? "Quantitative Finance" : "FinTech"})`
               : ""}
-            . Add University Core or free electives on a term, then use{" "}
-            <strong>Move</strong> to reshuffle. Summer is optional.
+            . Add University Core, major electives, or free electives on a term,
+            then use <strong>Move</strong> to reshuffle. Summer is optional.
           </p>
         </div>
         <div className="plan-actions">
@@ -275,7 +289,7 @@ export function CoursePattern({
                   {group.majorSlots.length === 0 && group.manualSlots.length === 0 && (
                     <p className="pattern-placeholder">
                       No courses here yet — move a course in, or add University Core /
-                      free elective.
+                      major elective / free elective.
                     </p>
                   )}
                   <div className="term-add-row">
@@ -292,6 +306,14 @@ export function CoursePattern({
                     >
                       Add University Core
                       {canPlaceUc ? ` (${unplacedUc.length} left)` : ""}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost term-add"
+                      title="Add an extra major elective beyond the recommended pattern"
+                      onClick={() => onAddMajorElective(group.year, group.term)}
+                    >
+                      Add Major Elective
                     </button>
                     <button
                       type="button"

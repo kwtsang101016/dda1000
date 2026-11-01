@@ -116,6 +116,27 @@ export function buildUcSlots(): PlanSlot[] {
   }));
 }
 
+/** Extra major-elective slot students add beyond the recommended pattern. */
+export function createExtraElectiveSlot(
+  year: number,
+  term: TermKind,
+): PlanSlot {
+  return {
+    id: `el-extra-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    kind: "elective",
+    year,
+    term,
+    termLabel: termLabelFor(term),
+    role: ROLE_LABELS["major-elective"],
+    roleTag: "major-elective",
+    units: 3,
+  };
+}
+
+export function isExtraElectiveSlot(slotId: string): boolean {
+  return slotId.startsWith("el-extra-");
+}
+
 export function buildFreeSlots(major: MajorId): PlanSlot[] {
   const total = freeElectiveUnits(major);
   const slots: PlanSlot[] = [];

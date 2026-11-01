@@ -2,14 +2,18 @@ import type { FeStreamId, MajorId, ManualCourse, StreamTag } from "../data/types
 import { STREAM_LABELS } from "../data/streams";
 import {
   emptyManualAssignments,
+  isExtraElectiveSlot,
   seedCatalogAssignments,
+  termLabelFor,
   type ManualAssignments,
   type PlanAssignments,
+  type PlanSlot,
   type SlotPlacements,
   type TermKind,
   type TermPlacement,
 } from "./planSlots";
 import { buildFreeSlots, buildUcSlots } from "./planSlots";
+import { ROLE_LABELS } from "../data/streams";
 
 const STORAGE_KEY = "dda1000-study-planner-v1";
 
@@ -21,6 +25,8 @@ export interface StoredState {
   placements: SlotPlacements;
   summerYears: number[];
   claimedStream: StreamTag | null;
+  /** Extra major-elective slots beyond the seeded pattern. */
+  electiveExtra: PlanSlot[];
 }
 
 export interface PlanExportBundle {
@@ -34,6 +40,7 @@ export interface PlanExportBundle {
   placements: SlotPlacements;
   summerYears: number[];
   claimedStream: StreamTag | null;
+  electiveExtra: PlanSlot[];
 }
 
 const MAJORS: MajorId[] = ["CSE", "DSBDT", "STA", "FE"];
@@ -80,6 +87,36 @@ function parseClaimedStream(raw: unknown): StreamTag | null {
   return raw in STREAM_LABELS ? (raw as StreamTag) : null;
 }
 
+function parseElectiveExtra(raw: unknown): PlanSlot[] {
+  if (!Array.isArray(raw)) return [];
+  const out: PlanSlot[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const obj = item as Record<string, unknown>;
+    const id = obj.id;
+    const year = obj.year;
+    const term = obj.term;
+    if (
+      typeof id === "string" &&
+      isExtraElectiveSlot(id) &&
+      typeof year === "number" &&
+      isTermKind(term)
+    ) {
+      out.push({
+        id,
+        kind: "elective",
+        year,
+        term,
+        termLabel: termLabelFor(term),
+        role: ROLE_LABELS["major-elective"],
+        roleTag: "major-elective",
+        units: typeof obj.units === "number" ? obj.units : 3,
+      });
+    }
+  }
+  return out;
+}
+
 export function loadSavedState(): StoredState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -106,6 +143,9 @@ export function loadSavedState(): StoredState {
       placements: parsePlacements(parsed.placements),
       summerYears: parseSummerYears(parsed.summerYears),
       claimedStream: parseClaimedStream(parsed.claimedStream),
+      electiveExtra: parseElectiveExtra(
+        (parsed as StoredState & { electiveExtra?: unknown }).electiveExtra,
+      ),
     };
   } catch {
     return blankState();
@@ -121,6 +161,7 @@ function blankState(): StoredState {
     placements: {},
     summerYears: [],
     claimedStream: null,
+    electiveExtra: [],
   };
 }
 
@@ -179,6 +220,7 @@ export async function importPlanFromFile(file: File): Promise<StoredState> {
   const placements = parsePlacements(obj.placements);
   const summerYears = parseSummerYears(obj.summerYears);
   const claimedStream = parseClaimedStream(obj.claimedStream);
+  const electiveExtra = parseElectiveExtra(obj.electiveExtra);
   const state = {
     major,
     feStream,
@@ -187,6 +229,7 @@ export async function importPlanFromFile(file: File): Promise<StoredState> {
     placements,
     summerYears,
     claimedStream,
+    electiveExtra,
   };
   savePlannerState(state);
   return state;
