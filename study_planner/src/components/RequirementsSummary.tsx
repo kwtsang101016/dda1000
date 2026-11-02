@@ -10,15 +10,27 @@ import {
   analyzeExtraMajorChecks,
   collectedMajorCodes,
 } from "../lib/streamCheck";
-import type { ManualAssignments, PlanAssignments, PlanSlot } from "../lib/planSlots";
+import {
+  analyzeUcGeValidity,
+  validitySummary,
+  type CheckLevel,
+} from "../lib/ucCheck";
+import type {
+  ManualAssignments,
+  PlanAssignments,
+  PlanSlot,
+  SlotPlacements,
+} from "../lib/planSlots";
 import "./RequirementsSummary.css";
 
 interface Props {
   major: MajorId;
   feStream: FeStreamId | null;
   majorSlots: PlanSlot[];
+  ucSlots: PlanSlot[];
   assignments: PlanAssignments;
   manual: ManualAssignments;
+  placements: SlotPlacements;
   remainingUcLabels?: string[];
   remainingFreeSlots?: number;
   claimedStream: StreamTag | null;
@@ -70,12 +82,81 @@ function SatisfiedMark({ ok }: { ok: boolean }) {
   );
 }
 
+function StatusMark({ level }: { level: CheckLevel }) {
+  const title =
+    level === "pass"
+      ? "Passed"
+      : level === "fail"
+        ? "Not valid"
+        : level === "warn"
+          ? "Warning"
+          : "Incomplete";
+  if (level === "pass") {
+    return (
+      <span className="req-check" title={title} aria-label={title}>
+        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+          <circle cx="10" cy="10" r="10" fill="currentColor" />
+          <path
+            d="M5.8 10.2 8.6 13l5.6-6.2"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
+    );
+  }
+  if (level === "fail") {
+    return (
+      <span className="req-status req-status--fail" title={title} aria-label={title}>
+        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+          <circle cx="10" cy="10" r="10" fill="currentColor" />
+          <path
+            d="M6.5 6.5 13.5 13.5M13.5 6.5 6.5 13.5"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+          />
+        </svg>
+      </span>
+    );
+  }
+  if (level === "warn") {
+    return (
+      <span className="req-status req-status--warn" title={title} aria-label={title}>
+        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+          <circle cx="10" cy="10" r="10" fill="currentColor" />
+          <path
+            d="M10 5.5v6M10 14.2h.01"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+          />
+        </svg>
+      </span>
+    );
+  }
+  return (
+    <span className="req-status req-status--pending" title={title} aria-label={title}>
+      <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+        <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
+      </svg>
+    </span>
+  );
+}
+
 export function RequirementsSummary({
   major,
   feStream,
   majorSlots,
+  ucSlots,
   assignments,
   manual,
+  placements,
   remainingUcLabels = [],
   remainingFreeSlots = 0,
   claimedStream,
@@ -101,6 +182,8 @@ export function RequirementsSummary({
   const claimOptions = claimableStreams(major);
   const claimProgress = analyzeClaimedStream(major, claimedStream, taken);
   const extras = analyzeExtraMajorChecks(major, taken);
+  const ucGeChecks = analyzeUcGeValidity({ ucSlots, manual, placements });
+  const ucGeSummary = validitySummary(ucGeChecks);
 
   const schoolOk = school.slots > 0 && school.filledSlots === school.slots;
   const requiredOk = required.slots > 0 && required.filledSlots === required.slots;
@@ -202,6 +285,35 @@ export function RequirementsSummary({
             </div>
           );
         })}
+      </div>
+
+      <div className="plan-validity">
+        <h3>Plan validity checks</h3>
+        <p>
+          Automatic checks against University Core / GE enrolment rules
+          {ucGeSummary.fails > 0
+            ? ` · ${ucGeSummary.fails} issue${ucGeSummary.fails === 1 ? "" : "s"} to fix`
+            : ucGeSummary.warns > 0
+              ? ` · ${ucGeSummary.warns} warning${ucGeSummary.warns === 1 ? "" : "s"}`
+              : ucGeSummary.pending > 0
+                ? " · some items still incomplete"
+                : " · all checked items look valid"}
+          .
+        </p>
+        <ul className="plan-validity__list">
+          {ucGeChecks.map((check) => (
+            <li
+              key={check.id}
+              className={`plan-validity__item plan-validity__item--${check.level}`}
+            >
+              <StatusMark level={check.level} />
+              <div>
+                <strong>{check.label}</strong>
+                <p>{check.detail}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {claimOptions.length > 0 && (

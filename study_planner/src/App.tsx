@@ -460,8 +460,10 @@ export default function App() {
               major={major}
               feStream={feStream}
               majorSlots={majorSlots}
+              ucSlots={ucSlots}
               assignments={assignments}
               manual={manual}
+              placements={placements}
               remainingUcLabels={ucSlots
                 .filter((s) => !placements[s.id])
                 .map((s) => s.category ?? "University Core")}
