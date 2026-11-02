@@ -2,6 +2,7 @@ import { FE_STREAM_LABELS, GRADUATION_TOTAL, MAJORS, UNIVERSITY_CORE_UNITS, free
 import { SCHEME_NOTES } from "../data/schemeNotes";
 import { claimableStreams } from "../data/streamRequirements";
 import { ROLE_LABELS, STREAM_COLORS, STREAM_LABELS, STREAMS_BY_MAJOR } from "../data/streams";
+import { UC_BREAKDOWN_LABEL, UNIVERSITY_CORE_NOTES } from "../data/universityCore";
 import type { FeStreamId, MajorId, RoleTag, StreamTag } from "../data/types";
 import { getCourse } from "../lib/courseUtils";
 import {
@@ -117,7 +118,7 @@ export function RequirementsSummary({
       detail:
         remainingUcLabels.length > 0
           ? `Still to place on a term: ${remainingUcLabels.join(", ")}`
-          : "Chinese 3 + English 12 + Digital & AI Literacy 1 + GE 18 + PE 2 · all on timeline",
+          : `${UC_BREAKDOWN_LABEL} · all on timeline`,
       ok: ucOk,
     },
     {
@@ -317,6 +318,15 @@ export function RequirementsSummary({
           </p>
         </div>
       )}
+
+      <div className="scheme-notes">
+        <h3>University Core &amp; GE notes</h3>
+        <ul>
+          {UNIVERSITY_CORE_NOTES.map((note) => (
+            <li key={note}>{note}</li>
+          ))}
+        </ul>
+      </div>
 
       <div className="scheme-notes">
         <h3>Scheme notes ({info.shortLabel})</h3>

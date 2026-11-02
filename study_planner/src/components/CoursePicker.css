@@ -111,6 +111,30 @@
   flex: 1;
 }
 
+.uc-pick-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem 1rem;
+  overflow: auto;
+  flex: 1;
+}
+
+.uc-pick-group__title {
+  margin: 0.35rem 0.35rem 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-muted, #5c655f);
+}
+
+.uc-pick-group .picker__list {
+  padding: 0;
+  overflow: visible;
+  flex: none;
+}
+
 .picker__item {
   width: 100%;
   display: grid;

@@ -20,8 +20,12 @@ export function ManualCourseForm({
   onMove,
   onClose,
 }: Props) {
-  const [code, setCode] = useState(current?.code ?? "");
-  const [title, setTitle] = useState(current?.title ?? "");
+  const [code, setCode] = useState(
+    current?.code ?? (slot.kind === "uc" ? (slot.suggestedCode ?? "") : ""),
+  );
+  const [title, setTitle] = useState(
+    current?.title ?? (slot.kind === "uc" ? (slot.suggestedTitle ?? "") : ""),
+  );
   const [units, setUnits] = useState(current?.units ?? slot.units);
 
   useEffect(() => {
@@ -62,9 +66,12 @@ export function ManualCourseForm({
             </h2>
             <p>
               {slot.kind === "uc" && slot.category
-                ? `This slot counts toward the ${slot.category} University Core requirement (${slot.units}u). Enter the course you will take.`
+                ? `Counts toward: ${slot.category} (${slot.units}u). Enter the exact course you will take (e.g. replace GEA / PED11XX with a real catalogue code).`
                 : `Default ${slot.units} units — enter any course code and title.`}
             </p>
+            {slot.kind === "uc" && slot.hint ? (
+              <p className="manual-form__hint">{slot.hint}</p>
+            ) : null}
           </div>
           <div className="picker__head-actions">
             {onMove && (
@@ -88,7 +95,11 @@ export function ManualCourseForm({
             <input
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="e.g. CHI1000"
+              placeholder={
+                slot.kind === "uc"
+                  ? slot.suggestedCode ?? "e.g. CHI1000"
+                  : "e.g. elective code"
+              }
               autoFocus
             />
           </label>
@@ -97,7 +108,7 @@ export function ManualCourseForm({
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Course title"
+              placeholder={slot.suggestedTitle ?? "Course title"}
             />
           </label>
           <label>

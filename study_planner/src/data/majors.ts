@@ -48,6 +48,7 @@ export const FE_STREAM_LABELS: Record<FeStreamId, string> = {
   fintech: "FinTech",
 };
 
+/** Keep in sync with `UC_TOTAL_UNITS` in universityCore.ts (2025–26 curriculum). */
 export const UNIVERSITY_CORE_UNITS = 36;
 export const GRADUATION_TOTAL = 120;
 

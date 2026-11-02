@@ -23,6 +23,11 @@ export interface PlanSlot {
   /** Default units for empty elective / UC / free slots. */
   units: number;
   category?: string;
+  /** UC picker group heading. */
+  ucGroup?: string;
+  suggestedCode?: string;
+  suggestedTitle?: string;
+  hint?: string;
 }
 
 /** Catalogue / elective: course code or null. UC / free stored separately. */
@@ -112,6 +117,10 @@ export function buildUcSlots(): PlanSlot[] {
     kind: "uc" as const,
     role: "University core",
     category: t.category,
+    ucGroup: t.group,
+    suggestedCode: t.suggestedCode,
+    suggestedTitle: t.suggestedTitle,
+    hint: t.hint,
     units: t.defaultUnits,
   }));
 }
