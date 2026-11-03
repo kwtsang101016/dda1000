@@ -10,6 +10,9 @@ interface NameCardProps {
   highlighted?: boolean;
   /** Waiting matches = purple; seated matches = teal. */
   highlightKind?: "waiting" | "seated";
+  /** Student submitted a study plan via the planner. */
+  studyPlanSubmitted?: boolean;
+  studyPlanMajor?: string | null;
 }
 
 export function NameCard({
@@ -19,6 +22,8 @@ export function NameCard({
   selected = false,
   highlighted = false,
   highlightKind = "waiting",
+  studyPlanSubmitted = false,
+  studyPlanMajor = null,
 }: NameCardProps) {
   const roleLabel =
     person.role === "aa"
@@ -45,12 +50,14 @@ export function NameCard({
           "name-card--compact",
           `name-card--${person.role}`,
           selected ? "name-card--selected" : "",
+          studyPlanSubmitted ? "name-card--plan-submitted" : "",
           highlightClass,
         ]
           .filter(Boolean)
           .join(" ")}
       >
         <h3 className="name-card__name">{person.name}</h3>
+        {studyPlanSubmitted ? <span className="name-card__plan-dot" title="Study plan submitted" /> : null}
       </article>
     );
   }
@@ -62,6 +69,7 @@ export function NameCard({
         `name-card--${person.role}`,
         enlarged ? "name-card--enlarged" : "",
         selected ? "name-card--selected" : "",
+        studyPlanSubmitted ? "name-card--plan-submitted" : "",
         highlightClass,
         person.displayPhoto ? "name-card--has-photo" : "",
       ]
@@ -79,6 +87,11 @@ export function NameCard({
         {person.displayCountry ? <p className="name-card__meta">{person.displayCountry}</p> : null}
         {person.displayHobbies ? <p className="name-card__meta">{person.displayHobbies}</p> : null}
         {person.plan ? <p className="name-card__meta">{person.plan}</p> : null}
+        {studyPlanSubmitted ? (
+          <p className="name-card__meta name-card__meta--plan">
+            Study plan submitted{studyPlanMajor ? ` · ${studyPlanMajor}` : ""}
+          </p>
+        ) : null}
       </div>
     </article>
   );

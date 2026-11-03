@@ -10,6 +10,15 @@ import { loadCredentialHashes, secretsMatch } from "./credentials.ts";
 import { migrateLegacyIds } from "./legacyIds.ts";
 import { durableStoreEnabled, loadClassroomState, persistClassroomState } from "./stateStore.ts";
 import {
+  createViewToken,
+  getStudyPlan,
+  loadStudyPlans,
+  pruneViewTokens,
+  resolveViewToken,
+  saveStudyPlan,
+  studyPlanMetaMap,
+} from "./studyPlans.ts";
+import {
   DEFAULT_STATE,
   addGuest,
   createGuestPerson,
@@ -35,6 +44,7 @@ import type {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const statePath = path.join(rootDir, "data", "state.json");
+const studyPlansPath = path.join(rootDir, "data", "study-plans.json");
 const rosterPath = path.join(rootDir, "src", "data", "roster.json");
 const credentialsPath = path.join(rootDir, "server", "data", "credentials.json");
 const distDir = path.join(rootDir, "dist");
@@ -42,6 +52,10 @@ const PORT = Number(process.env.PORT) || 3001;
 const DEFAULT_PIN = "change-me-dda1000";
 const INSTRUCTOR_PIN = process.env.INSTRUCTOR_PIN || DEFAULT_PIN;
 const STUDENT_ID_SALT = process.env.STUDENT_ID_SALT?.trim() ?? "";
+/** Public planner URL used when minting instructor view links. */
+const STUDY_PLANNER_PUBLIC_URL =
+  process.env.STUDY_PLANNER_PUBLIC_URL?.trim() ||
+  "https://kwtsang101016.github.io/dda1000/study_planner/";
 
 interface SocketAuth {
   isInstructor: boolean;
@@ -147,6 +161,12 @@ async function main(): Promise<void> {
   credentialHashes = await loadCredentials();
   personIds = new Set(roster.people.map((person) => person.id));
   state = await loadState();
+  await loadStudyPlans(studyPlansPath);
+  // Keep badge meta in classroom state in sync with durable plan store.
+  state = {
+    ...state,
+    studyPlanMeta: studyPlanMetaMap(),
+  };
 
   if (STUDENT_ID_SALT) {
     const migration = migrateLegacyIds(state, credentialHashes, STUDENT_ID_SALT);
@@ -188,13 +208,137 @@ async function main(): Promise<void> {
   app.use(cors({ origin: true }));
   app.use(express.json({ limit: "250kb" }));
 
+  /** Filled after Socket.IO is created — HTTP submit needs to refresh live badges. */
+  let notifyClients: () => void = () => {};
+
   app.get("/health", (_req, res) => {
     res.json({
       ok: true,
       course: roster.course,
       section: roster.section,
       durableStore: durableStoreEnabled(),
+      studyPlans: Object.keys(state.studyPlanMeta ?? {}).length,
     });
+  });
+
+  /** Public roster cards for the study-planner “Submit to CAT” picker. */
+  app.get("/api/roster-cards", (_req, res) => {
+    res.json({
+      course: roster.course,
+      section: roster.section,
+      people: roster.people
+        .filter((p) => p.role === "student" || p.role === "pa")
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          englishName: p.englishName,
+          role: p.role,
+        })),
+    });
+  });
+
+  /** Student submits a planner JSON export (overwrites previous submission). */
+  app.post("/api/study-plans/submit", async (req, res) => {
+    try {
+      const { personId, studentId, plan } = req.body as {
+        personId?: unknown;
+        studentId?: unknown;
+        plan?: unknown;
+      };
+      if (typeof personId !== "string" || !personIds.has(personId)) {
+        throw new Error("Unknown name card.");
+      }
+      if (typeof studentId !== "string" || !studentId.trim()) {
+        throw new Error("Enter your student ID.");
+      }
+      const expected = credentialHashes[personId];
+      if (!expected) {
+        throw new Error("This card cannot receive study-plan submissions.");
+      }
+      if (!STUDENT_ID_SALT) {
+        throw new Error("Student login is not configured on the server yet.");
+      }
+      if (!secretsMatch(studentId, expected, STUDENT_ID_SALT)) {
+        throw new Error("Student ID does not match that name card.");
+      }
+
+      const record = await saveStudyPlan(studyPlansPath, personId, plan);
+      state = {
+        ...state,
+        studyPlanMeta: {
+          ...(state.studyPlanMeta ?? {}),
+          [personId]: {
+            submittedAt: record.submittedAt,
+            major: record.major,
+            feStream: record.feStream,
+          },
+        },
+      };
+      await persistState(state, true);
+      notifyClients();
+
+      res.json({
+        ok: true,
+        personId,
+        submittedAt: record.submittedAt,
+        major: record.major,
+        feStream: record.feStream,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not submit the study plan.";
+      res.status(400).json({ ok: false, message });
+    }
+  });
+
+  /** Instructor mints a short-lived link to open a plan in the study planner. */
+  app.post("/api/study-plans/view-token", (req, res) => {
+    try {
+      pruneViewTokens();
+      const { personId, instructorPin } = req.body as {
+        personId?: unknown;
+        instructorPin?: unknown;
+      };
+      if (typeof instructorPin !== "string" || instructorPin !== INSTRUCTOR_PIN) {
+        throw new Error("Instructor PIN is incorrect.");
+      }
+      if (typeof personId !== "string" || !personIds.has(personId)) {
+        throw new Error("Unknown name card.");
+      }
+      if (!getStudyPlan(personId)) {
+        throw new Error("That student has not submitted a study plan yet.");
+      }
+      const { token, expiresAt } = createViewToken(personId);
+      const base = STUDY_PLANNER_PUBLIC_URL.endsWith("/")
+        ? STUDY_PLANNER_PUBLIC_URL
+        : `${STUDY_PLANNER_PUBLIC_URL}/`;
+      const viewUrl = `${base}?catToken=${encodeURIComponent(token)}`;
+      res.json({ ok: true, token, expiresAt, viewUrl });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not create a view link.";
+      res.status(400).json({ ok: false, message });
+    }
+  });
+
+  /** Planner fetches a submitted plan via view token (no PIN in the URL). */
+  app.get("/api/study-plans/view/:token", (req, res) => {
+    try {
+      pruneViewTokens();
+      const record = resolveViewToken(req.params.token);
+      const person = roster.people.find((p) => p.id === record.personId);
+      res.json({
+        ok: true,
+        personId: record.personId,
+        name: person?.name ?? record.personId,
+        englishName: person?.englishName ?? "",
+        submittedAt: record.submittedAt,
+        major: record.major,
+        feStream: record.feStream,
+        plan: record.plan,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not load that study plan.";
+      res.status(400).json({ ok: false, message });
+    }
   });
 
   const hasDist = existsSync(distDir);
@@ -205,7 +349,11 @@ async function main(): Promise<void> {
         next();
         return;
       }
-      if (req.path.startsWith("/socket.io") || req.path === "/health") {
+      if (
+        req.path.startsWith("/socket.io") ||
+        req.path.startsWith("/api/") ||
+        req.path === "/health"
+      ) {
         next();
         return;
       }
@@ -254,6 +402,7 @@ async function main(): Promise<void> {
   const emitState = (): void => {
     io.emit("snapshot", snapshot(io.engine.clientsCount, buildPollPublic()));
   };
+  notifyClients = emitState;
 
   const emitPoll = (): void => {
     io.emit("poll-state", buildPollPublic());

@@ -79,6 +79,7 @@ function normalizeClientState(state: ClassroomState): ClassroomState {
     ...state,
     profiles: state.profiles ?? {},
     guests: Array.isArray(state.guests) ? state.guests : [],
+    studyPlanMeta: state.studyPlanMeta ?? {},
   };
 }
 

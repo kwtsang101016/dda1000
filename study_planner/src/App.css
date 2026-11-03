@@ -107,6 +107,41 @@
   gap: 2.75rem;
 }
 
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.95rem 1.1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(10, 77, 74, 0.2));
+}
+
+.banner p {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text-muted, #5c655f);
+}
+
+.banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.banner--cat {
+  background: rgba(196, 122, 18, 0.1);
+  border-color: rgba(196, 122, 18, 0.35);
+}
+
+.banner--error {
+  background: rgba(155, 44, 44, 0.08);
+  border-color: rgba(155, 44, 44, 0.3);
+  color: #9b2c2c;
+}
+
 .section__head {
   margin-bottom: 1.25rem;
 }

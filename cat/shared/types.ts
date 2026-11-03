@@ -15,6 +15,20 @@ export interface PersonProfile {
   photoDataUrl: string;
 }
 
+/** Lightweight badge info synced to every CAT client (no full plan payload). */
+export interface StudyPlanMeta {
+  submittedAt: string;
+  major: string | null;
+  feStream: string | null;
+}
+
+/** Full submission stored server-side; fetched when viewing a plan. */
+export interface StudyPlanRecord extends StudyPlanMeta {
+  personId: string;
+  /** Planner export bundle (`dda1000-study-planner`). */
+  plan: unknown;
+}
+
 export interface ClassroomState {
   studentRowCount: number;
   seatsPerRow: number;
@@ -25,6 +39,8 @@ export interface ClassroomState {
    * Synced over Socket.io, never written to Redis.
    */
   guests: Person[];
+  /** Who has submitted a study plan (for name-card badges). */
+  studyPlanMeta: Record<string, StudyPlanMeta>;
 }
 
 export interface Person {
@@ -72,3 +88,5 @@ export interface ServerSnapshot {
 export const MAX_PHOTO_DATA_URL_LENGTH = 180_000;
 export const MAX_PROFILE_TEXT_LENGTH = 80;
 export const MAX_GUEST_NAME_LENGTH = 40;
+/** Cap a single study-plan JSON payload (~photos already use 180kb). */
+export const MAX_STUDY_PLAN_JSON_LENGTH = 200_000;

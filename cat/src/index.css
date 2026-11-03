@@ -638,6 +638,36 @@ h1 {
   box-shadow: 0 0 0 2px color-mix(in srgb, #1f7a6a 25%, transparent);
 }
 
+.name-card--plan-submitted {
+  border-color: #c47a12;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, #e8a317 55%, transparent);
+  background: #fff6e8;
+}
+
+.name-card--aa.name-card--plan-submitted {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, #e8a317 70%, transparent);
+}
+
+.name-card__plan-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c47a12;
+}
+
+.name-card__meta--plan {
+  color: #9a5b00;
+  font-weight: 600;
+}
+
+.tray-card__badge--plan {
+  background: #f3d39a;
+  color: #6b3f00;
+}
+
 .name-card--enlarged {
   min-height: 140px;
   padding: 12px;

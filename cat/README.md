@@ -12,6 +12,7 @@ Realtime seating board for lecture **L12** (academic advisor 曾家炜 / Ka Wai 
 6. Use **Edit** to update your card (also requires your student ID)
 7. Search by name, college, country, hobbies, etc. — waiting matches are purple; seated matches are teal
 8. Auditors can **Add temporary card** (green-tinted); those cards sync live for the class but are **not** saved to Redis
+9. Study plans: from the [SDS study planner](https://kwtsang101016.github.io/dda1000/study_planner/), tap **Submit to CAT**, pick your name card, enter your student ID. Submitted cards show an **amber** border / Plan badge. The instructor (with PIN) can select the card and **View study plan** to open it in the planner.
 
 Student IDs are checked only on the server as salted one-way hashes (HMAC-SHA256 with the secret `STUDENT_ID_SALT`). Card ids such as `stu-07` are neutral; the public website and GitHub repo contain neither raw IDs nor hashes that can be reversed without the salt.
 

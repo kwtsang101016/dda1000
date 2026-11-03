@@ -7,4 +7,5 @@ export const PLANNER_NOTES: string[] = [
   "FE students must specialize in Quantitative Finance or FinTech; the recommended pattern differs by stream.",
   "Scheme footnotes for each major appear under Requirements summary.",
   "Use Export as PDF for a short printable course plan by term (handy to pin up). Export/Import JSON backs up or restores the editable plan in the browser.",
+  "Submit to CAT sends your plan JSON to the Class Attending Table (same student ID as seating). Your name card gets an amber mark; the instructor can open the plan in this planner from CAT.",
 ];

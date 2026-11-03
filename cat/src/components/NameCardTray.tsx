@@ -1,3 +1,4 @@
+import type { StudyPlanMeta } from "../../shared/types.ts";
 import type { DisplayPerson } from "../lib/people.ts";
 import { NameCard } from "./NameCard.tsx";
 
@@ -9,6 +10,7 @@ interface NameCardTrayProps {
   seatedMatches: DisplayPerson[];
   query: string;
   selectedId: string | null;
+  studyPlanMeta: Record<string, StudyPlanMeta>;
   onQueryChange: (value: string) => void;
   onSelect: (personId: string) => void;
   onEdit: (personId: string) => void;
@@ -24,6 +26,7 @@ export function NameCardTray({
   seatedMatches,
   query,
   selectedId,
+  studyPlanMeta,
   onQueryChange,
   onSelect,
   onEdit,
@@ -44,7 +47,8 @@ export function NameCardTray({
       </div>
       <p className="tray__hint">
         Search name, college, country, hobbies, and more. Waiting matches use purple; seated matches
-        use teal. Auditors can add a temporary card below (session only, not saved to Redis).
+        use teal. Amber border = study plan submitted. Auditors can add a temporary card below
+        (session only, not saved to Redis).
       </p>
       <label className="tray__search">
         <span>Find people</span>
@@ -68,6 +72,7 @@ export function NameCardTray({
         query={query}
         selectedId={selectedId}
         matchKind="waiting"
+        studyPlanMeta={studyPlanMeta}
         onSelect={onSelect}
         onEdit={onEdit}
       />
@@ -77,6 +82,7 @@ export function NameCardTray({
         query={query}
         selectedId={selectedId}
         matchKind="waiting"
+        studyPlanMeta={studyPlanMeta}
         onSelect={onSelect}
         onEdit={onEdit}
       />
@@ -86,6 +92,7 @@ export function NameCardTray({
         query={query}
         selectedId={selectedId}
         matchKind="waiting"
+        studyPlanMeta={studyPlanMeta}
         onSelect={onSelect}
         onEdit={onEdit}
       />
@@ -95,6 +102,7 @@ export function NameCardTray({
         query={query}
         selectedId={selectedId}
         matchKind="waiting"
+        studyPlanMeta={studyPlanMeta}
         onSelect={onSelect}
         onEdit={onEdit}
         onRemoveGuest={onRemoveGuest}
@@ -106,6 +114,7 @@ export function NameCardTray({
           query={query}
           selectedId={selectedId}
           matchKind="seated"
+          studyPlanMeta={studyPlanMeta}
           onSelect={onSelect}
           onEdit={onEdit}
           onRemoveGuest={onRemoveGuest}
@@ -158,6 +167,7 @@ function TrayGroup({
   query,
   selectedId,
   matchKind,
+  studyPlanMeta,
   onSelect,
   onEdit,
   onRemoveGuest,
@@ -167,6 +177,7 @@ function TrayGroup({
   query: string;
   selectedId: string | null;
   matchKind: "waiting" | "seated";
+  studyPlanMeta: Record<string, StudyPlanMeta>;
   onSelect: (personId: string) => void;
   onEdit: (personId: string) => void;
   onRemoveGuest?: (personId: string) => void;
@@ -185,6 +196,7 @@ function TrayGroup({
         {people.map((person) => {
           const selected = selectedId === person.id;
           const isGuest = person.role === "guest";
+          const planMeta = studyPlanMeta[person.id];
           return (
             <div
               key={person.id}
@@ -193,6 +205,7 @@ function TrayGroup({
                 selected ? "tray-card--selected" : "",
                 matchKind === "seated" ? "tray-card--seated" : "",
                 isGuest ? "tray-card--guest" : "",
+                planMeta ? "tray-card--plan-submitted" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -202,17 +215,20 @@ function TrayGroup({
                 className="name-card-handle"
                 onClick={() => onSelect(person.id)}
                 aria-pressed={selected}
-                aria-label={`Select ${person.name}${matchKind === "seated" ? " (seated)" : ""}`}
+                aria-label={`Select ${person.name}${matchKind === "seated" ? " (seated)" : ""}${planMeta ? ", study plan submitted" : ""}`}
               >
                 <NameCard
                   person={person}
                   selected={selected}
                   highlighted={query.trim().length > 0}
                   highlightKind={query.trim() ? matchKind : undefined}
+                  studyPlanSubmitted={Boolean(planMeta)}
+                  studyPlanMajor={planMeta?.major ?? null}
                 />
               </button>
               <div className="tray-card__actions">
                 {matchKind === "seated" ? <span className="tray-card__badge">Seated</span> : null}
+                {planMeta ? <span className="tray-card__badge tray-card__badge--plan">Plan</span> : null}
                 <button type="button" className="tray-card__edit" onClick={() => onEdit(person.id)}>
                   Edit
                 </button>

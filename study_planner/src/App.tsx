@@ -7,9 +7,11 @@ import { ManualCourseForm } from "./components/ManualCourseForm";
 import { MoveTermDialog } from "./components/MoveTermDialog";
 import { Notes } from "./components/Notes";
 import { RequirementsSummary } from "./components/RequirementsSummary";
+import { SubmitToCatModal } from "./components/SubmitToCatModal";
 import { UcCategoryPicker } from "./components/UcCategoryPicker";
 import { FE_STREAM_LABELS, MAJORS } from "./data/majors";
 import type { FeStreamId, MajorId, ManualCourse, StreamTag } from "./data/types";
+import { fetchPlanByCatToken } from "./lib/catApi";
 import {
   buildFreeSlots,
   buildMajorSlots,
@@ -32,9 +34,17 @@ import {
   downloadPlanExport,
   importPlanFromFile,
   loadSavedState,
+  parsePlanExport,
   savePlannerState,
+  type StoredState,
 } from "./lib/storage";
 import "./App.css";
+
+interface CatViewBanner {
+  name: string;
+  englishName: string;
+  submittedAt: string;
+}
 
 const NAV = [
   { id: "major", label: "Major" },
@@ -59,6 +69,11 @@ export default function App() {
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [movingSlotId, setMovingSlotId] = useState<string | null>(null);
   const [ucPlaceTarget, setUcPlaceTarget] = useState<TermPlacement | null>(null);
+  const [showSubmitCat, setShowSubmitCat] = useState(false);
+  const [catView, setCatView] = useState<CatViewBanner | null>(null);
+  const [catLoadError, setCatLoadError] = useState<string | null>(null);
+  /** When true, edits are for instructor preview and must not overwrite local draft. */
+  const [viewingRemote, setViewingRemote] = useState(false);
 
   const ready = major != null && (major !== "FE" || feStream != null);
 
@@ -92,6 +107,7 @@ export default function App() {
   );
 
   useEffect(() => {
+    if (viewingRemote) return;
     savePlannerState({
       major,
       feStream,
@@ -103,6 +119,7 @@ export default function App() {
       electiveExtra,
     });
   }, [
+    viewingRemote,
     major,
     feStream,
     assignments,
@@ -112,6 +129,81 @@ export default function App() {
     claimedStream,
     electiveExtra,
   ]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("catToken");
+    if (!token) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const remote = await fetchPlanByCatToken(token);
+        if (cancelled) return;
+        const parsed = parsePlanExport(remote.plan);
+        applyStoredState(parsed);
+        setViewingRemote(true);
+        setCatView({
+          name: remote.name,
+          englishName: remote.englishName,
+          submittedAt: remote.submittedAt,
+        });
+        setCatLoadError(null);
+        // Drop token from the address bar so refresh doesn't re-fetch a used/expired link unnecessarily.
+        const url = new URL(window.location.href);
+        url.searchParams.delete("catToken");
+        window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+      } catch (err) {
+        if (!cancelled) {
+          setCatLoadError(
+            err instanceof Error ? err.message : "Could not open the CAT study plan.",
+          );
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once from URL on mount
+  }, []);
+
+  function applyStoredState(next: StoredState) {
+    setMajor(next.major);
+    setFeStream(next.feStream);
+    setAssignments(next.assignments);
+    setManual(next.manual);
+    setPlacements(next.placements);
+    setSummerYears(next.summerYears);
+    setClaimedStream(next.claimedStream);
+    setElectiveExtra(next.electiveExtra);
+    setFreeExtra([]);
+  }
+
+  function exitCatView() {
+    setViewingRemote(false);
+    setCatView(null);
+    const local = loadSavedState();
+    applyStoredState(local);
+  }
+
+  function keepCatViewAsMine() {
+    if (!window.confirm("Save this submitted plan over your local draft on this device?")) {
+      return;
+    }
+    setViewingRemote(false);
+    setCatView(null);
+    savePlannerState({
+      major,
+      feStream,
+      assignments,
+      manual,
+      placements,
+      summerYears,
+      claimedStream,
+      electiveExtra,
+    });
+  }
 
   function confirmReseed(): boolean {
     return window.confirm(
@@ -447,6 +539,34 @@ export default function App() {
       </header>
 
       <main className="main">
+        {catLoadError ? (
+          <div className="banner banner--error" role="alert">
+            {catLoadError}
+          </div>
+        ) : null}
+        {catView ? (
+          <div className="banner banner--cat" role="status">
+            <div>
+              <strong>
+                Viewing CAT submission · {catView.name}
+                {catView.englishName ? ` (${catView.englishName})` : ""}
+              </strong>
+              <p>
+                Submitted {new Date(catView.submittedAt).toLocaleString()}. This preview
+                does not overwrite your local draft unless you choose Keep.
+              </p>
+            </div>
+            <div className="banner__actions">
+              <button type="button" className="btn btn--ghost" onClick={keepCatViewAsMine}>
+                Keep as my draft
+              </button>
+              <button type="button" className="btn btn--primary" onClick={exitCatView}>
+                Back to my draft
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         <MajorSelector
           major={major}
           feStream={feStream}
@@ -486,6 +606,7 @@ export default function App() {
               onExport={handleExport}
               onExportPdf={handleExportPdf}
               onImportFile={handleImport}
+              onSubmitToCat={() => setShowSubmitCat(true)}
               onReseed={handleReseed}
               onRemoveFreeSlot={handleRemoveFreeSlot}
               onRequestPlaceUc={handleRequestPlaceUc}
@@ -554,6 +675,22 @@ export default function App() {
           options={ucSlots.filter((s) => !placements[s.id])}
           onPick={handleConfirmPlaceUc}
           onClose={() => setUcPlaceTarget(null)}
+        />
+      )}
+
+      {showSubmitCat && (
+        <SubmitToCatModal
+          state={{
+            major,
+            feStream,
+            assignments,
+            manual,
+            placements,
+            summerYears,
+            claimedStream,
+            electiveExtra,
+          }}
+          onClose={() => setShowSubmitCat(false)}
         />
       )}
 

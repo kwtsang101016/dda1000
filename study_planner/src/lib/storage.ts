@@ -192,14 +192,7 @@ export function downloadPlanExport(state: StoredState): void {
   URL.revokeObjectURL(url);
 }
 
-export async function importPlanFromFile(file: File): Promise<StoredState> {
-  const text = await file.text();
-  let data: unknown;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    throw new Error("That file is not valid JSON.");
-  }
+export function parsePlanExport(data: unknown): StoredState {
   if (!data || typeof data !== "object") {
     throw new Error("That file does not look like a planner export.");
   }
@@ -221,7 +214,7 @@ export async function importPlanFromFile(file: File): Promise<StoredState> {
   const summerYears = parseSummerYears(obj.summerYears);
   const claimedStream = parseClaimedStream(obj.claimedStream);
   const electiveExtra = parseElectiveExtra(obj.electiveExtra);
-  const state = {
+  return {
     major,
     feStream,
     assignments,
@@ -231,6 +224,17 @@ export async function importPlanFromFile(file: File): Promise<StoredState> {
     claimedStream,
     electiveExtra,
   };
+}
+
+export async function importPlanFromFile(file: File): Promise<StoredState> {
+  const text = await file.text();
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error("That file is not valid JSON.");
+  }
+  const state = parsePlanExport(data);
   savePlannerState(state);
   return state;
 }

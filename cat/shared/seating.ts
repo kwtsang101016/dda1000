@@ -23,6 +23,7 @@ export const DEFAULT_STATE: ClassroomState = {
   placements: {},
   profiles: {},
   guests: [],
+  studyPlanMeta: {},
 };
 
 export function cloneState(state: ClassroomState): ClassroomState {
@@ -32,6 +33,7 @@ export function cloneState(state: ClassroomState): ClassroomState {
     placements: { ...state.placements },
     profiles: { ...state.profiles },
     guests: state.guests.map((guest) => ({ ...guest })),
+    studyPlanMeta: { ...(state.studyPlanMeta ?? {}) },
   };
 }
 
@@ -64,6 +66,7 @@ export function forDurableStore(state: ClassroomState): ClassroomState {
     placements,
     profiles,
     guests: [],
+    studyPlanMeta: { ...(state.studyPlanMeta ?? {}) },
   };
 }
 
@@ -218,6 +221,7 @@ export function resetSeating(state: ClassroomState): ClassroomState {
     placements: {},
     profiles: { ...state.profiles },
     guests: state.guests.map((guest) => ({ ...guest })),
+    studyPlanMeta: { ...(state.studyPlanMeta ?? {}) },
   };
 }
 
@@ -349,7 +353,7 @@ export function isClassroomState(value: unknown): value is ClassroomState {
   return true;
 }
 
-/** Migrate older saved state that lacked profiles / guests. */
+/** Migrate older saved state that lacked profiles / guests / studyPlanMeta. */
 export function normalizeLoadedState(value: ClassroomState): ClassroomState {
   return {
     studentRowCount: value.studentRowCount,
@@ -357,5 +361,9 @@ export function normalizeLoadedState(value: ClassroomState): ClassroomState {
     placements: value.placements,
     profiles: value.profiles ?? {},
     guests: Array.isArray(value.guests) ? value.guests : [],
+    studyPlanMeta:
+      value.studyPlanMeta && typeof value.studyPlanMeta === "object"
+        ? value.studyPlanMeta
+        : {},
   };
 }

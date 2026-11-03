@@ -5,7 +5,11 @@ import { NameCardTray } from "./components/NameCardTray.tsx";
 import { PollPanel } from "./components/PollPanel.tsx";
 import { ProfileEditor } from "./components/ProfileEditor.tsx";
 import { Seat } from "./components/Seat.tsx";
-import { rememberInstructorSecret, rememberPersonSecret } from "./lib/authSession.ts";
+import {
+  loadAuthSession,
+  rememberInstructorSecret,
+  rememberPersonSecret,
+} from "./lib/authSession.ts";
 import { downloadAttendanceCsv } from "./lib/attendanceExport.ts";
 import { mergePerson, type DisplayPerson } from "./lib/people.ts";
 import { useClassroomSync } from "./lib/useClassroomSync.ts";
@@ -76,6 +80,7 @@ export default function App() {
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [viewPlanBusy, setViewPlanBusy] = useState(false);
   const lastTapRef = useRef<{ id: string; at: number } | null>(null);
 
   const peopleById = useMemo(() => {
@@ -116,6 +121,40 @@ export default function App() {
   const guestsWaiting = unseated.filter((person) => person.role === "guest");
   const selectedPerson = selectedId ? peopleById[selectedId] : undefined;
   const editingPerson = editingId ? peopleById[editingId] : undefined;
+  const studyPlanMeta = sync.state.studyPlanMeta ?? {};
+  const selectedPlanMeta = selectedId ? studyPlanMeta[selectedId] : undefined;
+
+  const handleViewStudyPlan = async () => {
+    if (!selectedId || !selectedPlanMeta) {
+      return;
+    }
+    const pin = loadAuthSession().instructorSecret;
+    if (!pin) {
+      window.alert("Enter the instructor PIN first (Instructor PIN), then try View study plan again.");
+      return;
+    }
+    setViewPlanBusy(true);
+    try {
+      const response = await fetch("/api/study-plans/view-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ personId: selectedId, instructorPin: pin }),
+      });
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        message?: string;
+        viewUrl?: string;
+      };
+      if (!response.ok || !payload.ok || !payload.viewUrl) {
+        throw new Error(payload.message || "Could not open the study plan.");
+      }
+      window.open(payload.viewUrl, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Could not open the study plan.");
+    } finally {
+      setViewPlanBusy(false);
+    }
+  };
 
   const runAction = (action: PendingAction) => {
     switch (action.type) {
@@ -400,6 +439,21 @@ export default function App() {
             >
               Edit card
             </button>
+            {selectedPlanMeta ? (
+              <button
+                type="button"
+                className="ghost-button"
+                disabled={!sync.isInstructor || viewPlanBusy}
+                title={
+                  sync.isInstructor
+                    ? `Submitted ${new Date(selectedPlanMeta.submittedAt).toLocaleString()}${selectedPlanMeta.major ? ` · ${selectedPlanMeta.major}` : ""}`
+                    : "Instructor only — enter PIN first"
+                }
+                onClick={() => void handleViewStudyPlan()}
+              >
+                {viewPlanBusy ? "Opening…" : "View study plan"}
+              </button>
+            ) : null}
             {seatedIds.has(selectedPerson.id) ? (
               <button
                 type="button"
@@ -483,6 +537,8 @@ export default function App() {
                   selected={selectedId === occupantId}
                   targetable={Boolean(selectedId) && !occupant}
                   highlighted={Boolean(occupant && query.trim() && matchesQuery(occupant, query))}
+                  studyPlanSubmitted={Boolean(occupantId && studyPlanMeta[occupantId])}
+                  studyPlanMajor={occupantId ? studyPlanMeta[occupantId]?.major ?? null : null}
                   onSelect={() => handleSeatTap(target, occupantId)}
                   onDoubleUnseat={() => {
                     if (!occupantId) {
@@ -516,6 +572,8 @@ export default function App() {
                     selected={selectedId === occupantId}
                     targetable={Boolean(selectedId) && !occupant}
                     highlighted={Boolean(occupant && query.trim() && matchesQuery(occupant, query))}
+                    studyPlanSubmitted={Boolean(occupantId && studyPlanMeta[occupantId])}
+                    studyPlanMajor={occupantId ? studyPlanMeta[occupantId]?.major ?? null : null}
                     onSelect={() => handleSeatTap(target, occupantId)}
                     onDoubleUnseat={() => {
                       if (!occupantId) {
@@ -538,6 +596,7 @@ export default function App() {
           seatedMatches={seatedMatches}
           query={query}
           selectedId={selectedId}
+          studyPlanMeta={studyPlanMeta}
           onQueryChange={setQuery}
           onSelect={selectPerson}
           onEdit={(personId) => ensureAndRun({ type: "edit", personId })}

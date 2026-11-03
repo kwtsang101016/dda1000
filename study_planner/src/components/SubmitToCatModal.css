@@ -1,0 +1,47 @@
+.submit-cat {
+  max-width: 440px;
+}
+
+.submit-cat__form,
+.submit-cat__done {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem 1.15rem 1.25rem;
+}
+
+.submit-cat__form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  color: var(--ink-muted, #5c655f);
+}
+
+.submit-cat__form input,
+.submit-cat__form select {
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid rgba(10, 77, 74, 0.22);
+  font: inherit;
+  color: inherit;
+  background: #fff;
+}
+
+.submit-cat__error {
+  margin: 0;
+  color: #9b2c2c;
+  font-size: 0.88rem;
+}
+
+.submit-cat__status,
+.submit-cat__meta {
+  margin: 0;
+  color: var(--text-muted, #5c655f);
+  font-size: 0.88rem;
+}
+
+.submit-cat__done p {
+  margin: 0;
+  line-height: 1.45;
+}

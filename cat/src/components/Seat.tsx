@@ -9,6 +9,8 @@ interface SeatProps {
   selected?: boolean;
   targetable?: boolean;
   highlighted?: boolean;
+  studyPlanSubmitted?: boolean;
+  studyPlanMajor?: string | null;
   onSelect: () => void;
   onDoubleUnseat: () => void;
 }
@@ -21,6 +23,8 @@ export function Seat({
   selected = false,
   targetable = false,
   highlighted = false,
+  studyPlanSubmitted = false,
+  studyPlanMajor = null,
   onSelect,
   onDoubleUnseat,
 }: SeatProps) {
@@ -111,6 +115,8 @@ export function Seat({
           selected={selected}
           highlighted={highlighted}
           highlightKind="seated"
+          studyPlanSubmitted={studyPlanSubmitted}
+          studyPlanMajor={studyPlanMajor}
         />
       ) : (
         <span className="seat__placeholder">sit here</span>
@@ -119,7 +125,12 @@ export function Seat({
         ? createPortal(
             <div className="seat-preview-overlay" role="presentation" aria-hidden="true">
               <div className="seat-preview-card">
-                <NameCard person={occupant} enlarged />
+                <NameCard
+                  person={occupant}
+                  enlarged
+                  studyPlanSubmitted={studyPlanSubmitted}
+                  studyPlanMajor={studyPlanMajor}
+                />
               </div>
             </div>,
             document.body,
