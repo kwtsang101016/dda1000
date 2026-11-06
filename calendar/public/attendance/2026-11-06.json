@@ -1,0 +1,514 @@
+{
+  "date": "2026-11-06",
+  "course": "DDA1000",
+  "section": "L12",
+  "recordedAt": "2026-11-06T06:19:54.580Z",
+  "label": "My own study plan",
+  "studentRowCount": 4,
+  "seatsPerRow": 10,
+  "people": [
+    {
+      "id": "aa-01",
+      "name": "曾家炜",
+      "englishName": "Ka Wai Tsang",
+      "role": "aa",
+      "photo": "/photos/aa-tsang.png",
+      "present": true,
+      "placement": {
+        "zone": "advisor",
+        "row": 0,
+        "seat": 4
+      }
+    },
+    {
+      "id": "pa-01",
+      "name": "张雅婧",
+      "role": "pa",
+      "leading": true,
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 0,
+        "seat": 0
+      }
+    },
+    {
+      "id": "pa-02",
+      "name": "吴蔡延",
+      "role": "pa",
+      "present": false,
+      "placement": null
+    },
+    {
+      "id": "pa-03",
+      "name": "梁心睿",
+      "role": "pa",
+      "present": false,
+      "placement": null
+    },
+    {
+      "id": "student-01",
+      "name": "梁语心",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 3,
+        "seat": 1
+      }
+    },
+    {
+      "id": "student-02",
+      "name": "林乔莹",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 2,
+        "seat": 3
+      }
+    },
+    {
+      "id": "student-03",
+      "name": "林湛恩",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 3,
+        "seat": 6
+      }
+    },
+    {
+      "id": "student-04",
+      "name": "刘杰睿",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 2,
+        "seat": 6
+      }
+    },
+    {
+      "id": "student-05",
+      "name": "刘君昊",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": false,
+      "placement": null
+    },
+    {
+      "id": "student-06",
+      "name": "刘一凡",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 1,
+        "seat": 4
+      }
+    },
+    {
+      "id": "student-07",
+      "name": "孙贲",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 2,
+        "seat": 5
+      }
+    },
+    {
+      "id": "student-08",
+      "name": "吕文恺",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 1,
+        "seat": 7
+      }
+    },
+    {
+      "id": "student-09",
+      "name": "唐婧",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 0,
+        "seat": 4
+      }
+    },
+    {
+      "id": "student-10",
+      "name": "田梓仟",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 1,
+        "seat": 2
+      }
+    },
+    {
+      "id": "student-11",
+      "name": "王子墨",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 1,
+        "seat": 6
+      }
+    },
+    {
+      "id": "student-12",
+      "name": "萧诺",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 2,
+        "seat": 2
+      }
+    },
+    {
+      "id": "student-13",
+      "name": "吴洛宇",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": false,
+      "placement": null
+    },
+    {
+      "id": "student-14",
+      "name": "李佶喆",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 0,
+        "seat": 6
+      }
+    },
+    {
+      "id": "student-15",
+      "name": "廖欣驰",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 0,
+        "seat": 8
+      }
+    },
+    {
+      "id": "student-16",
+      "name": "马钰森",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 3,
+        "seat": 8
+      }
+    },
+    {
+      "id": "student-17",
+      "name": "倪溯飞",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 2,
+        "seat": 0
+      }
+    },
+    {
+      "id": "student-18",
+      "name": "牛英儒",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 0,
+        "seat": 9
+      }
+    },
+    {
+      "id": "student-19",
+      "name": "欧阳志颖",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 2,
+        "seat": 9
+      }
+    },
+    {
+      "id": "student-20",
+      "name": "潘卫东",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 1,
+        "seat": 1
+      }
+    },
+    {
+      "id": "student-21",
+      "name": "潘锡楷",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 3,
+        "seat": 3
+      }
+    },
+    {
+      "id": "student-22",
+      "name": "荣统宝",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 3,
+        "seat": 9
+      }
+    },
+    {
+      "id": "student-23",
+      "name": "商熵",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 0,
+        "seat": 7
+      }
+    },
+    {
+      "id": "student-24",
+      "name": "孙苗馨",
+      "role": "student",
+      "college": "Shaw College",
+      "plan": "Common Plan of BSc of SDS",
+      "present": false,
+      "placement": null
+    },
+    {
+      "id": "student-25",
+      "name": "高和兴",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 2,
+        "seat": 7
+      }
+    },
+    {
+      "id": "student-26",
+      "name": "林钰",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 3,
+        "seat": 0
+      }
+    },
+    {
+      "id": "student-27",
+      "name": "刘硕",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 2,
+        "seat": 8
+      }
+    },
+    {
+      "id": "student-28",
+      "name": "马睿言",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 3,
+        "seat": 4
+      }
+    },
+    {
+      "id": "student-29",
+      "name": "彭俊豪",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 1,
+        "seat": 9
+      }
+    },
+    {
+      "id": "student-30",
+      "name": "沈也",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 3,
+        "seat": 5
+      }
+    },
+    {
+      "id": "student-31",
+      "name": "王子宸",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 0,
+        "seat": 3
+      }
+    },
+    {
+      "id": "student-32",
+      "name": "肖逸航",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 1,
+        "seat": 8
+      }
+    },
+    {
+      "id": "student-33",
+      "name": "杨彬睿",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 2,
+        "seat": 4
+      }
+    },
+    {
+      "id": "student-34",
+      "name": "叶一诺",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 1,
+        "seat": 3
+      }
+    },
+    {
+      "id": "student-35",
+      "name": "张馨文",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering",
+      "present": false,
+      "placement": null
+    },
+    {
+      "id": "student-36",
+      "name": "郑子墨",
+      "role": "student",
+      "college": "Muse College",
+      "plan": "Financial Engineering",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 1,
+        "seat": 5
+      }
+    },
+    {
+      "id": "guest-01",
+      "name": "吴洛宇",
+      "englishName": "吴洛宇",
+      "role": "guest",
+      "present": true,
+      "placement": {
+        "zone": "student",
+        "row": 3,
+        "seat": 7
+      }
+    }
+  ]
+}

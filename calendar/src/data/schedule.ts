@@ -76,6 +76,7 @@ export const COURSE_EVENTS: CourseEvent[] = [
     kind: "separate",
     venue: SEPARATE_VENUE,
     note: "Course journals returned",
+    attendanceFile: "2026-11-06.json",
   },
   { date: "2026-11-13", title: "Off-campus activities", kind: "joint", venue: "Venue TBC" },
   {

@@ -29,7 +29,33 @@
   background: #fff;
 }
 
+.manual-form.picker {
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
 .manual-form__body .btn--primary {
   align-self: flex-start;
   margin-top: 0.25rem;
+}
+
+@media (max-width: 719px) {
+  .manual-form .picker__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .manual-form .picker__head-actions {
+    justify-content: flex-end;
+  }
+
+  .manual-form__body .btn--primary {
+    position: sticky;
+    bottom: 0;
+    align-self: stretch;
+    margin-top: 0.15rem;
+    box-shadow: 0 -10px 16px 8px #fffdf8;
+  }
 }
