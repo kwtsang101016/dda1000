@@ -1,3 +1,4 @@
+import { courseCondition } from "../data/courseConditions";
 import { STREAM_COLORS, STREAM_LABELS } from "../data/streams";
 import type { MajorId, StreamTag } from "../data/types";
 import { getCourse, streamsForMajor } from "../lib/courseUtils";
@@ -24,6 +25,7 @@ export function CourseInfoCard({
   onClick,
 }: Props) {
   if (manual) {
+    const condition = courseCondition(manual.code);
     const body = (
       <>
         <div className="course-card__top">
@@ -31,6 +33,7 @@ export function CourseInfoCard({
           <span className="course-card__units">{manual.units}u</span>
         </div>
         <p className="course-card__title">{manual.title || "Untitled"}</p>
+        {condition && <p className="course-card__condition">{condition}</p>}
         {fallbackRole && (
           <div className="course-card__streams">
             <span className="stream-chip stream-chip--muted">{fallbackRole}</span>
@@ -70,9 +73,9 @@ export function CourseInfoCard({
 
   const course = getCourse(code);
   const title = course?.title ?? "Unknown course";
-  const streams =
-    course && major ? streamsForMajor(course, major) : [];
+  const streams = course && major ? streamsForMajor(course, major) : [];
   const units = course?.units ?? 3;
+  const condition = courseCondition(code);
 
   const body = (
     <>
@@ -81,6 +84,7 @@ export function CourseInfoCard({
         <span className="course-card__units">{units}u</span>
       </div>
       <p className="course-card__title">{title}</p>
+      {condition && <p className="course-card__condition">{condition}</p>}
       {course?.statusNote && <p className="course-card__note">{course.statusNote}</p>}
       <div className="course-card__streams">
         {streams.length > 0

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { courseCondition } from "../data/courseConditions";
 import { ROLE_LABELS, STREAM_COLORS, STREAM_LABELS, STREAMS_BY_MAJOR } from "../data/streams";
 import type { MajorId, RoleTag, StreamTag } from "../data/types";
 import {
@@ -202,6 +203,9 @@ export function CoursePicker({
                   <span className="picker__code">{c.code}</span>
                   <span className="picker__meta">
                     <span className="picker__title">{c.title}</span>
+                    {courseCondition(c.code) ? (
+                      <span className="picker__sub">{courseCondition(c.code)}</span>
+                    ) : null}
                     <span className="picker__sub">
                       {c.units}u
                       {roleTags.length
