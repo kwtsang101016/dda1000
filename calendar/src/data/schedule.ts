@@ -14,6 +14,8 @@ export interface CourseEvent {
   special?: boolean;
   /** Optional attendance snapshot under public/attendance/{file} */
   attendanceFile?: string;
+  /** Optional submitted study plans under public/study-plans/{file} */
+  studyPlansFile?: string;
 }
 
 export const EVENT_KIND_LABELS: Record<EventKind, string> = {
@@ -77,6 +79,7 @@ export const COURSE_EVENTS: CourseEvent[] = [
     venue: SEPARATE_VENUE,
     note: "Course journals returned",
     attendanceFile: "2026-11-06.json",
+    studyPlansFile: "2026-11-06.json",
   },
   { date: "2026-11-13", title: "Off-campus activities", kind: "joint", venue: "Venue TBC" },
   {

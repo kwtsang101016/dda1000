@@ -1,11 +1,13 @@
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { AttendanceSnapshot, DisplayPerson } from "../lib/attendance";
 import { toDisplayPerson } from "../lib/attendance";
+import { studyPlannerUrl, type PublishedStudyPlan } from "../lib/studyPlans";
 import { NameCard } from "./NameCard";
 import { Seat } from "./Seat";
 
 interface ReadonlyClassroomProps {
   snapshot: AttendanceSnapshot;
+  studyPlans: PublishedStudyPlan[];
   onBack: () => void;
 }
 
@@ -37,8 +39,9 @@ function byDisplayName(a: DisplayPerson, b: DisplayPerson): number {
   return a.displayName.localeCompare(b.displayName, "zh-CN");
 }
 
-export function ReadonlyClassroom({ snapshot, onBack }: ReadonlyClassroomProps) {
+export function ReadonlyClassroom({ snapshot, studyPlans, onBack }: ReadonlyClassroomProps) {
   const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tool, setTool] = useState<"view" | "zoomIn" | "zoomOut">("view");
   const [zoom, setZoom] = useState(1);
   const hallViewportRef = useRef<HTMLDivElement | null>(null);
@@ -46,6 +49,9 @@ export function ReadonlyClassroom({ snapshot, onBack }: ReadonlyClassroomProps) 
   const zoomAnchorRef = useRef<{ contentX: number; contentY: number } | null>(null);
 
   const people = useMemo(() => snapshot.people.map(toDisplayPerson), [snapshot.people]);
+  const plansById = useMemo(() => new Map(studyPlans.map((plan) => [plan.id, plan])), [studyPlans]);
+  const selected = people.find((person) => person.id === selectedId) ?? null;
+  const selectedPlan = selected ? plansById.get(selected.id) ?? null : null;
 
   const occupancy = useMemo(() => {
     const map = new Map<string, DisplayPerson>();
@@ -152,8 +158,9 @@ export function ReadonlyClassroom({ snapshot, onBack }: ReadonlyClassroomProps) 
       </header>
 
       <p className="howto">
-        This is a saved attendance record. Seats cannot be changed. Press and hold a filled seat to
-        preview the name card. Use magnifier tools to spread seats for crowded rows.
+        This is a saved attendance record. Seats cannot be changed. Click a name card, then View
+        study plan, to open that submission in the study planner. Press and hold a filled seat to
+        preview the card. Use magnifier tools to spread seats for crowded rows.
       </p>
 
       <section className="controls" aria-label="View tools">
@@ -231,6 +238,9 @@ export function ReadonlyClassroom({ snapshot, onBack }: ReadonlyClassroomProps) 
                     seatCount={seatCount}
                     seatLabel={seatLabel("advisor", 0, seat)}
                     occupant={occupant}
+                    selected={occupant?.id === selectedId}
+                    hasPlan={Boolean(occupant && plansById.has(occupant.id))}
+                    onSelect={tool === "view" ? setSelectedId : undefined}
                   />
                 );
               })}
@@ -253,6 +263,9 @@ export function ReadonlyClassroom({ snapshot, onBack }: ReadonlyClassroomProps) 
                       seatCount={seatCount}
                       seatLabel={seatLabel("student", row, seat)}
                       occupant={occupant}
+                      selected={occupant?.id === selectedId}
+                      hasPlan={Boolean(occupant && plansById.has(occupant.id))}
+                      onSelect={tool === "view" ? setSelectedId : undefined}
                     />
                   );
                 })}
@@ -283,12 +296,64 @@ export function ReadonlyClassroom({ snapshot, onBack }: ReadonlyClassroomProps) 
               autoComplete="off"
             />
           </label>
-          <TrayGroup title="AA & PAs" people={advisors} />
-          <TrayGroup title="Students (not seated)" people={students} />
-          <TrayGroup title="Guests" people={guests} />
-          {query.trim() ? <TrayGroup title="Already seated (search)" people={seatedMatches} seated /> : null}
+          <TrayGroup
+            title="AA & PAs"
+            people={advisors}
+            plansById={plansById}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+          <TrayGroup
+            title="Students (not seated)"
+            people={students}
+            plansById={plansById}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+          <TrayGroup
+            title="Guests"
+            people={guests}
+            plansById={plansById}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+          {query.trim() ? (
+            <TrayGroup
+              title="Already seated (search)"
+              people={seatedMatches}
+              seated
+              plansById={plansById}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
+          ) : null}
         </aside>
       </div>
+      {selected ? (
+        <div className="plan-bar">
+          <p>
+            Selected: <strong>{selected.displayName}</strong>
+            {selectedPlan?.major ? ` · ${selectedPlan.major}` : ""}
+          </p>
+          <div className="plan-bar__actions">
+            {selectedPlan ? (
+              <a
+                className="primary-button plan-bar__open"
+                href={studyPlannerUrl(snapshot.date, selectedPlan)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View study plan
+              </a>
+            ) : (
+              <span className="plan-bar__missing">No study plan submitted</span>
+            )}
+            <button type="button" className="ghost-button" onClick={() => setSelectedId(null)}>
+              Close
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -317,10 +382,16 @@ function TrayGroup({
   title,
   people,
   seated = false,
+  plansById,
+  selectedId,
+  onSelect,
 }: {
   title: string;
   people: DisplayPerson[];
   seated?: boolean;
+  plansById: Map<string, PublishedStudyPlan>;
+  selectedId: string | null;
+  onSelect: (personId: string) => void;
 }) {
   if (people.length === 0) {
     return null;
@@ -332,9 +403,21 @@ function TrayGroup({
       </h3>
       <div className="tray-group__cards">
         {people.map((person) => (
-          <div key={person.id} className={seated ? "tray-card tray-card--seated" : "tray-card"}>
+          <button
+            key={person.id}
+            type="button"
+            className={[
+              "tray-card",
+              seated ? "tray-card--seated" : "",
+              plansById.has(person.id) ? "tray-card--plan" : "",
+              person.id === selectedId ? "tray-card--selected" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onClick={() => onSelect(person.id)}
+          >
             <NameCard person={person} />
-          </div>
+          </button>
         ))}
       </div>
     </div>

@@ -368,6 +368,71 @@ h1 {
   background: #fbf7f0;
 }
 
+.seat--selected {
+  outline: 2px solid var(--plum);
+  outline-offset: 1px;
+}
+
+.seat--plan {
+  box-shadow: inset 0 0 0 2px var(--gold);
+}
+
+.plan-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: #fffaf2;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(20, 16, 12, 0.12);
+}
+
+.plan-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.plan-bar__open {
+  display: inline-block;
+  background: var(--plum);
+  color: #fffaf2;
+  border-color: var(--plum);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.plan-bar__missing {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.tray-card {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tray-card--plan .name-card {
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.tray-card--selected .name-card {
+  outline: 2px solid var(--plum);
+}
+
 .seat--holding {
   z-index: 5;
 }

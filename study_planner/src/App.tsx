@@ -12,6 +12,7 @@ import { UcCategoryPicker } from "./components/UcCategoryPicker";
 import { FE_STREAM_LABELS, MAJORS } from "./data/majors";
 import type { FeStreamId, MajorId, ManualCourse, StreamTag } from "./data/types";
 import { fetchPlanByCatToken } from "./lib/catApi";
+import { fetchPublishedStudyPlan } from "./lib/publishedPlan";
 import {
   buildFreeSlots,
   buildMajorSlots,
@@ -133,12 +134,17 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("catToken");
-    if (!token) return;
+    const planDate = params.get("planDate");
+    const person = params.get("person");
+    const rosterId = params.get("roster");
+    if (!token && !(planDate && person)) return;
 
     let cancelled = false;
     (async () => {
       try {
-        const remote = await fetchPlanByCatToken(token);
+        const remote = token
+          ? await fetchPlanByCatToken(token)
+          : await fetchPublishedStudyPlan(planDate ?? "", person ?? "", rosterId);
         if (cancelled) return;
         const parsed = parsePlanExport(remote.plan);
         applyStoredState(parsed);
@@ -149,9 +155,12 @@ export default function App() {
           submittedAt: remote.submittedAt,
         });
         setCatLoadError(null);
-        // Drop token from the address bar so refresh doesn't re-fetch a used/expired link unnecessarily.
+        // Drop the link from the address bar so a refresh returns to the local draft.
         const url = new URL(window.location.href);
         url.searchParams.delete("catToken");
+        url.searchParams.delete("planDate");
+        url.searchParams.delete("person");
+        url.searchParams.delete("roster");
         window.history.replaceState({}, "", url.pathname + url.search + url.hash);
       } catch (err) {
         if (!cancelled) {

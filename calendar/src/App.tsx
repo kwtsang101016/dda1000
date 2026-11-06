@@ -3,11 +3,18 @@ import { MonthCalendar } from "./components/MonthCalendar";
 import { ReadonlyClassroom } from "./components/ReadonlyClassroom";
 import { EVENT_KIND_LABELS, type CourseEvent } from "./data/schedule";
 import type { AttendanceSnapshot } from "./lib/attendance";
+import { fetchPublishedStudyPlans, type PublishedStudyPlan } from "./lib/studyPlans";
 
 type View =
   | { mode: "calendar" }
   | { mode: "day"; date: string; events: CourseEvent[] }
-  | { mode: "attendance"; date: string; events: CourseEvent[]; snapshot: AttendanceSnapshot };
+  | {
+      mode: "attendance";
+      date: string;
+      events: CourseEvent[];
+      snapshot: AttendanceSnapshot;
+      studyPlans: PublishedStudyPlan[];
+    };
 
 const SEMESTER_START = { year: 2026, month: 8 }; // September
 
@@ -43,7 +50,9 @@ export default function App() {
         throw new Error(`Could not load attendance for ${date} (${response.status}).`);
       }
       const snapshot = (await response.json()) as AttendanceSnapshot;
-      setView({ mode: "attendance", date, events, snapshot });
+      const plansFile = events.find((event) => event.studyPlansFile)?.studyPlansFile;
+      const studyPlans = plansFile ? await fetchPublishedStudyPlans(plansFile) : [];
+      setView({ mode: "attendance", date, events, snapshot, studyPlans });
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : "Failed to load attendance.");
     } finally {
@@ -77,6 +86,7 @@ export default function App() {
     return (
       <ReadonlyClassroom
         snapshot={view.snapshot}
+        studyPlans={view.studyPlans}
         onBack={() => setView({ mode: "calendar" })}
       />
     );

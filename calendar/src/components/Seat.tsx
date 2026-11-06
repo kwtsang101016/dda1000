@@ -7,15 +7,26 @@ interface SeatProps {
   seatCount: number;
   seatLabel: string;
   occupant?: DisplayPerson;
+  selected?: boolean;
+  hasPlan?: boolean;
+  onSelect?: (personId: string) => void;
 }
 
 const HOLD_MS = 280;
 
-export function Seat({ seatCount, seatLabel, occupant }: SeatProps) {
+export function Seat({
+  seatCount,
+  seatLabel,
+  occupant,
+  selected = false,
+  hasPlan = false,
+  onSelect,
+}: SeatProps) {
   const [holding, setHolding] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const timerRef = useRef<number | null>(null);
   const pointerIdRef = useRef<number | null>(null);
+  const openedHoldRef = useRef(false);
 
   const clearHoldTimer = () => {
     if (timerRef.current !== null) {
@@ -47,21 +58,34 @@ export function Seat({ seatCount, seatLabel, occupant }: SeatProps) {
       // Hold still works via up/cancel without capture.
     }
     timerRef.current = window.setTimeout(() => {
+      openedHoldRef.current = true;
       setHolding(true);
     }, HOLD_MS);
   };
 
   const endHold = () => {
+    const openedPreview = openedHoldRef.current;
+    openedHoldRef.current = false;
     clearHoldTimer();
     setHolding(false);
     releasePointer();
+    if (!openedPreview && occupant && onSelect) {
+      onSelect(occupant.id);
+    }
   };
 
   return (
     <button
       type="button"
       ref={buttonRef}
-      className={["seat", occupant ? "seat--filled" : "seat--empty"].filter(Boolean).join(" ")}
+      className={[
+        "seat",
+        occupant ? "seat--filled" : "seat--empty",
+        selected ? "seat--selected" : "",
+        hasPlan ? "seat--plan" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       style={{ ["--seat-count" as string]: seatCount }}
       onPointerDown={startHold}
       onPointerUp={endHold}

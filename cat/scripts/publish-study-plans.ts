@@ -5,7 +5,7 @@
  *
  * Matches each plan to the attendance snapshot id (student-01, …) by roster order.
  */
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Role, Roster } from "../shared/types.ts";
@@ -96,7 +96,9 @@ async function main(): Promise<void> {
     };
   });
 
-  const outPath = path.join(calendarDir, "public/study-plans", `${date}.json`);
+  const outDir = path.join(calendarDir, "public/study-plans");
+  await mkdir(outDir, { recursive: true });
+  const outPath = path.join(outDir, `${date}.json`);
   const file = {
     date,
     course: roster.course,
