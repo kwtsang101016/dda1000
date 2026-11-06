@@ -291,6 +291,48 @@ async function main(): Promise<void> {
     }
   });
 
+  function publicStudyPlans() {
+    const peopleById = new Map(roster.people.map((person) => [person.id, person]));
+    return listStudyPlans().map((record) => {
+      const person = peopleById.get(record.personId);
+      return {
+        personId: record.personId,
+        name: person?.name ?? record.personId,
+        englishName: person?.englishName ?? "",
+        role: person?.role ?? "student",
+        submittedAt: record.submittedAt,
+        major: record.major,
+        feStream: record.feStream,
+        plan: record.plan,
+      };
+    });
+  }
+
+  /**
+   * Class-readable copies for the public calendar. These are the same plans an
+   * instructor opens from a name card. Student ID numbers are not included.
+   */
+  app.get("/api/study-plans/shared", (_req, res) => {
+    const plans = publicStudyPlans();
+    res.json({
+      ok: true,
+      course: roster.course,
+      section: roster.section,
+      exportedAt: new Date().toISOString(),
+      count: plans.length,
+      plans,
+    });
+  });
+
+  app.get("/api/study-plans/shared/:personId", (req, res) => {
+    const plan = publicStudyPlans().find((entry) => entry.personId === req.params.personId);
+    if (!plan) {
+      res.status(404).json({ ok: false, message: "That student has not submitted a study plan yet." });
+      return;
+    }
+    res.json({ ok: true, ...plan });
+  });
+
   /** Instructor downloads every submitted plan (names and planner JSON, no student IDs). */
   app.post("/api/study-plans/export", (req, res) => {
     try {
@@ -298,20 +340,7 @@ async function main(): Promise<void> {
       if (typeof instructorPin !== "string" || instructorPin !== INSTRUCTOR_PIN) {
         throw new Error("Instructor PIN is incorrect.");
       }
-      const peopleById = new Map(roster.people.map((person) => [person.id, person]));
-      const exported = listStudyPlans().map((record) => {
-        const person = peopleById.get(record.personId);
-        return {
-          personId: record.personId,
-          name: person?.name ?? record.personId,
-          englishName: person?.englishName ?? "",
-          role: person?.role ?? "student",
-          submittedAt: record.submittedAt,
-          major: record.major,
-          feStream: record.feStream,
-          plan: record.plan,
-        };
-      });
+      const exported = publicStudyPlans();
       res.json({
         ok: true,
         course: roster.course,
