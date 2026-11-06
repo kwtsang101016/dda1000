@@ -11,6 +11,7 @@ import {
   rememberPersonSecret,
 } from "./lib/authSession.ts";
 import { downloadAttendanceCsv } from "./lib/attendanceExport.ts";
+import { downloadStudyPlans } from "./lib/studyPlanExport.ts";
 import { mergePerson, type DisplayPerson } from "./lib/people.ts";
 import { useClassroomSync } from "./lib/useClassroomSync.ts";
 import {
@@ -32,14 +33,15 @@ type PendingAction =
   | { type: "edit"; personId: string }
   | { type: "reset" }
   | { type: "saveAttendance" }
+  | { type: "saveStudyPlans" }
   | { type: "setLayout"; studentRowCount: number; seatsPerRow: number }
   | { type: "becomeInstructor" };
 
 function isInstructorAction(
   action: PendingAction,
-): action is Extract<PendingAction, { type: "reset" | "saveAttendance" | "setLayout" | "becomeInstructor" }> {
+): action is Extract<PendingAction, { type: "reset" | "saveAttendance" | "saveStudyPlans" | "setLayout" | "becomeInstructor" }> {
   return action.type === "reset" || action.type === "setLayout" || action.type === "saveAttendance" ||
-    action.type === "becomeInstructor";
+    action.type === "saveStudyPlans" || action.type === "becomeInstructor";
 }
 
 function matchesQuery(person: DisplayPerson, query: string): boolean {
@@ -181,6 +183,17 @@ export default function App() {
           ...(sync.state.guests ?? []),
         ]);
         break;
+      case "saveStudyPlans": {
+        const pin = loadAuthSession().instructorSecret;
+        if (!pin) {
+          window.alert("Enter the instructor PIN first, then save the study plans again.");
+          break;
+        }
+        void downloadStudyPlans(pin, roster).catch((error: unknown) => {
+          window.alert(error instanceof Error ? error.message : "Could not save the study plans.");
+        });
+        break;
+      }
       case "setLayout":
         sync.setLayout(action.studentRowCount, action.seatsPerRow);
         break;
@@ -251,6 +264,20 @@ export default function App() {
 
   const handleSaveAttendance = () => {
     ensureAndRun({ type: "saveAttendance" });
+  };
+
+  const handleSaveStudyPlans = () => {
+    const submitted = Object.keys(sync.state.studyPlanMeta ?? {}).length;
+    if (submitted === 0) {
+      window.alert("No study plans have been submitted yet.");
+      return;
+    }
+    if (!loadAuthSession().instructorSecret) {
+      setAuthError(null);
+      window.setTimeout(() => setPending({ type: "saveStudyPlans" }), 0);
+      return;
+    }
+    ensureAndRun({ type: "saveStudyPlans" });
   };
 
   const handleAddGuest = (name: string, englishName: string) => {
@@ -515,6 +542,9 @@ export default function App() {
         </button>
         <button type="button" className="ghost-button" onClick={handleSaveAttendance}>
           Save attendance
+        </button>
+        <button type="button" className="ghost-button" onClick={handleSaveStudyPlans}>
+          Save study plans ({Object.keys(studyPlanMeta).length})
         </button>
       </section>
 

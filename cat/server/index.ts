@@ -12,6 +12,7 @@ import { durableStoreEnabled, loadClassroomState, persistClassroomState } from "
 import {
   createViewToken,
   getStudyPlan,
+  listStudyPlans,
   loadStudyPlans,
   pruneViewTokens,
   resolveViewToken,
@@ -286,6 +287,41 @@ async function main(): Promise<void> {
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not submit the study plan.";
+      res.status(400).json({ ok: false, message });
+    }
+  });
+
+  /** Instructor downloads every submitted plan (names and planner JSON, no student IDs). */
+  app.post("/api/study-plans/export", (req, res) => {
+    try {
+      const { instructorPin } = req.body as { instructorPin?: unknown };
+      if (typeof instructorPin !== "string" || instructorPin !== INSTRUCTOR_PIN) {
+        throw new Error("Instructor PIN is incorrect.");
+      }
+      const peopleById = new Map(roster.people.map((person) => [person.id, person]));
+      const exported = listStudyPlans().map((record) => {
+        const person = peopleById.get(record.personId);
+        return {
+          personId: record.personId,
+          name: person?.name ?? record.personId,
+          englishName: person?.englishName ?? "",
+          role: person?.role ?? "student",
+          submittedAt: record.submittedAt,
+          major: record.major,
+          feStream: record.feStream,
+          plan: record.plan,
+        };
+      });
+      res.json({
+        ok: true,
+        course: roster.course,
+        section: roster.section,
+        exportedAt: new Date().toISOString(),
+        count: exported.length,
+        plans: exported,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not export study plans.";
       res.status(400).json({ ok: false, message });
     }
   });

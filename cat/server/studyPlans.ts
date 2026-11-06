@@ -116,6 +116,10 @@ export function getStudyPlan(personId: string): StudyPlanRecord | null {
   return plans[personId] ?? null;
 }
 
+export function listStudyPlans(): StudyPlanRecord[] {
+  return Object.values(plans).sort((a, b) => a.submittedAt.localeCompare(b.submittedAt));
+}
+
 export function validatePlannerExport(plan: unknown): {
   major: string | null;
   feStream: string | null;
